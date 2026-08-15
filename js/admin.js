@@ -52,7 +52,149 @@
     if (lo) lo.addEventListener('click', function () { sessionStorage.removeItem('rb_admin_token'); sessionStorage.removeItem('rb_admin_time'); auth.signOut().then(function () { window.location.replace('index.html'); }); });
     $$('.tab').forEach(function (btn) {
       btn.addEventListener('click', function () {
-        $$('.tab').forEach(function (x) { x.classList.remove('active});
+        $$('.tab').forEach(function (x) { x.classList.remove('active'); });
+        $$('.tab-panel').forEach(function (x) { x.classList.remove('active'); });
+        btn.classList.add('active');
+        var p = document.querySelector('[data-panel="' + btn.getAttribute('data-tab') + '"]');
+        if (p) p.classList.add('active');
+        var tb = btn.getAttribute('data-tab');
+        if (tb === 'messages') loadMessages();
+        if (tb === 'logs') loadLogs();
+        if (tb === 'dashboard') loadDashboard();
+        if (tb === 'bans') loadBans();
+      });
+    });
+    var rb = $('#btn-refresh-bans'); if (rb) rb.addEventListener('click', loadBans);
+    var rm = $('#btn-refresh-messages'); if (rm) rm.addEventListener('click', loadMessages);
+  }
+  db.collection('bans').doc(DEVICE_ID).get().then(function (snap) {
+    if (snap.exists) { show404(); return; }
+    if (getSec().banned) setSec({ attempts: 0, banned: false });
+    boot();
+  }).catch(function () { if (getSec().banned) { show404(); return; } boot(); });
+  function loadAll() {
+    Promise.all([
+      db.collection('config').doc('site').get().catch(function () { return null; }),
+      db.collection('products').get().catch(function () { return null; }),
+      db.collection('faq').get().catch(function () { return null; }),
+      db.collection('features').get().catch(function () { return null; }),
+      db.collection('translations').doc('site').get().catch(function () { return null; }),
+      db.collection('banner').doc('main').get().catch(function () { return null; }),
+      db.collection('activity').orderBy('createdAt', 'desc').limit(20).get().catch(function () { return null; })
+    ]).then(function (r) {
+      if (r[0] && r[0].exists) config = r[0].data();
+      products = []; if (r[1]) r[1].forEach(function (d) { var p = d.data(); p.id = d.id; products.push(p); });
+      faqs = []; if (r[2]) r[2].forEach(function (d) { var f = d.data(); f.id = d.id; faqs.push(f); });
+      features = []; if (r[3]) r[3].forEach(function (d) { var f = d.data(); f.id = d.id; features.push(f); });
+      if (r[4] && r[4].exists) translations = r[4].data();
+      if (r[5] && r[5].exists) banner = r[5].data();
+      logs = []; if (r[6]) r[6].forEach(function (d) { var l = d.data(); l.id = d.id; logs.push(l); });
+      buildAll();
+    }).catch(function () { buildAll(); });
+  }
+  function buildAll() { buildGeneral(); buildProducts(); buildFAQ(); buildFeatures(); buildBanner(); buildTranslations(); loadDashboard(); }
+  function buildGeneral() {
+    $('#inp-lang').value = config.defaultLang || 'en';
+    $('#inp-email').value = config.fallbackEmail || '';
+    $('#inp-logo').value = config.logo || '';
+    $('#soc-discord').value = (config.social && config.social.discord) || '';
+    $('#soc-telegram').value = (config.social && config.social.telegram) || '';
+    $('#soc-youtube').value = (config.social && config.social.youtube) || '';
+    $('#soc-tiktok').value = (config.social && config.social.tiktok) || '';
+  }
+  var sg = $('#btn-save-general');
+  if (sg) sg.addEventListener('click', function () {
+    config = { defaultLang: $('#inp-lang').value, fallbackEmail: $('#inp-email').value.trim(), logo: $('#inp-logo').value.trim(), social: { discord: $('#soc-discord').value.trim(), telegram: $('#soc-telegram').value.trim(), youtube: $('#soc-youtube').value.trim(), tiktok: $('#soc-tiktok').value.trim() } };
+    db.collection('config').doc('site').set(config).then(function () { toast('Genel ayarlar kaydedildi', 'success'); logAction('update_general', 'Genel ayarlar güncellendi'); }).catch(function (e) { toast('Hata: ' + e.message, 'error'); });
+  });
+  var lf2 = $('#logo-file');
+  if (lf2) lf2.addEventListener('change', function () { if (!lf2.files[0]) return; uploadImage(lf2.files[0]).then(function (url) { $('#inp-logo').value = url; toast('Logo yüklendi', 'success'); }).catch(function (e) { toast('Hata: ' + e.message, 'error'); }); });
+  function compressImage(file, maxDim, q) {
+    return new Promise(function (res, rej) {
+      var rd = new FileReader();
+      rd.onload = function () {
+        var img = new Image();
+        img.onload = function () {
+          var sc = Math.min(1, maxDim / Math.max(img.width, img.height));
+          var c = document.createElement('canvas');
+          c.width = Math.max(1, Math.round(img.width * sc)); c.height = Math.max(1, Math.round(img.height * sc));
+          c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+          res(c.toDataURL(file.type === 'image/png' ? 'image/png' : 'image/jpeg', q));
+        };
+        img.onerror = rej; img.src = rd.result;
+      };
+      rd.onerror = rej; rd.readAsDataURL(file);
+    });
+  }
+  function uploadImage(file) {
+    toast('Görsel sıkıştırılıyor…', 'info');
+    var st = [[1200, 0.85], [900, 0.78], [700, 0.7], [520, 0.62]];
+    function at(i) {
+      return compressImage(file, st[i][0], st[i][1]).then(function (d) {
+        if (d.length <= 900000 || i === st.length - 1) { if (d.length > 950000) throw new Error('Görsel çok büyük'); toast('Görsel hazır ✓', 'success'); return d; }
+        return at(i + 1);
+      });
+    }
+    return at(0);
+  }
+  var COLORS = ['#7c3aed', '#a855f7', '#06b6d4', '#ec4899', '#10b981', '#f59e0b', '#ef4444', '#3b82f6'];
+  function colorRowHTML(cur) {
+    return '<div class="color-row"><span class="color-label">Renk:</span>' + COLORS.map(function (c) { return '<button type="button" class="swatch' + ((cur || '') === c ? ' sel' : '') + '" data-color="' + c + '" style="background:' + c + '"></button>'; }).join('') + '<input type="color" class="color-custom" value="' + (cur || '#06b6d4') + '"></div>';
+  }
+  function bindColor(row) {
+    var hid = row.querySelector('.p-color, .v-color'); if (!hid) return;
+    row.querySelectorAll('.swatch').forEach(function (sw) {
+      sw.addEventListener('click', function () {
+        row.querySelectorAll('.swatch').forEach(function (x) { x.classList.remove('sel'); });
+        sw.classList.add('sel'); hid.value = sw.getAttribute('data-color');
+        var cu = row.querySelector('.color-custom'); if (cu) cu.value = sw.getAttribute('data-color');
+      });
+    });
+    var cu = row.querySelector('.color-custom');
+    if (cu) cu.addEventListener('change', function () { row.querySelectorAll('.swatch').forEach(function (x) { x.classList.remove('sel'); }); hid.value = cu.value; });
+  }
+  var ICON_LIST = ['fa-solid fa-cube', 'fa-solid fa-box', 'fa-solid fa-gem', 'fa-solid fa-star', 'fa-solid fa-heart', 'fa-solid fa-bolt', 'fa-solid fa-lightbulb', 'fa-solid fa-rocket', 'fa-solid fa-flame', 'fa-solid fa-crown', 'fa-solid fa-shield-halved', 'fa-solid fa-layer-group', 'fa-solid fa-users', 'fa-solid fa-gamepad', 'fa-solid fa-robot', 'fa-solid fa-code', 'fa-solid fa-terminal', 'fa-solid fa-server', 'fa-solid fa-database', 'fa-solid fa-cloud', 'fa-solid fa-globe', 'fa-solid fa-chart-line', 'fa-solid fa-gauge-high', 'fa-solid fa-wand-magic-sparkles', 'fa-solid fa-palette', 'fa-brands fa-discord', 'fa-brands fa-github', 'fa-brands fa-youtube', 'fa-brands fa-x-twitter', 'fa-brands fa-instagram', 'fa-brands fa-apple', 'fa-brands fa-android', 'fa-brands fa-java', 'fa-brands fa-python'];
+  function openIconPicker() {
+    var m = $('#icon-picker'), g = $('#icon-grid'); if (!m || !g) return;
+    g.innerHTML = ICON_LIST.map(function (ic, i) { return '<button type="button" class="icon-item" data-icon="' + ic + '" style="--c:' + COLORS[i % COLORS.length] + '"><i class="' + ic + '"></i><span>' + ic.replace(/^fa-(solid|brands)\s/, '') + '</span></button>'; }).join('');
+    m.classList.add('open');
+    g.querySelectorAll('.icon-item').forEach(function (b) {
+      b.addEventListener('click', function () { if (currentIconInput) currentIconInput.value = b.getAttribute('data-icon'); m.classList.remove('open'); toast('İkon seçildi', 'info'); });
+    });
+  }
+  var ipc = $('#icon-picker-close'); if (ipc) ipc.addEventListener('click', function () { $('#icon-picker').classList.remove('open'); });
+  var ipm = $('#icon-picker'); if (ipm) ipm.addEventListener('click', function (e) { if (e.target === ipm) ipm.classList.remove('open'); });
+  function buildProducts() {
+    products.sort(function (a, b) { return (a.order || 0) - (b.order || 0); });
+    var c = $('#product-rows'); if (!c) return;
+    c.innerHTML = products.length === 0 ? '<p class="msg-empty">Henüz ürün yok.</p>' : products.map(productRow).join('');
+    bindProductEvents();
+  }
+  function productRow(p) {
+    var st = [['dev', 'Geliştirmede'], ['project', 'Proje'], ['active', 'Aktif']].map(function (s) { return '<option value="' + s[0] + '"' + (p.status === s[0] ? ' selected' : '') + '>' + s[1] + '</option>'; }).join('');
+    return '<div class="admin-row" data-pid="' + p.id + '"><div class="row-header"><div class="row-title"><input type="text" class="p-name" value="' + esc(p.name || '') + '" placeholder="Ürün adı"></div><input type="number" class="p-order" value="' + (p.order || 0) + '" style="width:64px"></div>' +
+      '<div class="row-controls"><input type="text" class="p-platform" value="' + esc(p.platform || '') + '" placeholder="Platform"><select class="p-status">' + st + '</select></div>' +
+      '<div class="row-controls" style="margin-top:8px"><label class="btn btn-glow btn-sm" style="justify-content:center"><i class="fa-solid fa-upload"></i> Görsel Yükle<input type="file" class="p-file" accept="image/*" hidden></label><input type="text" class="p-image" value="' + esc(p.image || '') + '" placeholder="Görsel (yükleyince otomatik dolar)" readonly></div>' +
+      '<div class="row-controls full" style="margin-top:8px"><input type="text" class="p-download" value="' + esc(p.download || '') + '" placeholder="İndirme linki"></div>' +
+      '<div class="row-controls" style="margin-top:8px;grid-template-columns:1fr auto"><input type="text" class="p-icon" value="' + esc(p.icon || 'fa-solid fa-box') + '" readonly><button type="button" class="btn btn-glow btn-sm p-pick-icon"><i class="fa-solid fa-palette"></i> İkon Seç</button></div>' +
+      '<input type="hidden" class="p-color" value="' + esc(p.color || '') + '">' + colorRowHTML(p.color) +
+      '<div class="row-controls" style="margin-top:8px"><textarea class="p-desc-en" rows="2" placeholder="Açıklama (EN)">' + esc((p.desc && p.desc.en) || '') + '</textarea><textarea class="p-desc-tr" rows="2" placeholder="Açıklama (TR)">' + esc((p.desc && p.desc.tr) || '') + '</textarea></div>' +
+      '<div class="row-controls" style="margin-top:8px"><textarea class="p-feat-en" rows="3" placeholder="Özellikler (EN)">' + esc(((p.features && p.features.en) || []).join('\n')) + '</textarea><textarea class="p-feat-tr" rows="3" placeholder="Özellikler (TR)">' + esc(((p.features && p.features.tr) || []).join('\n')) + '</textarea></div>' +
+      '<div class="row-actions"><button type="button" class="btn btn-primary btn-sm p-save"><i class="fa-solid fa-floppy-disk"></i> Kaydet</button><button type="button" class="btn btn-outline btn-sm danger p-delete"><i class="fa-solid fa-trash"></i> Sil</button></div></div>';
+  }
+  function bindProductEvents() {
+    $$('.admin-row[data-pid]').forEach(function (row) {
+      row.querySelector('.p-file').addEventListener('change', function () { var f = row.querySelector('.p-file').files[0]; if (!f) return; uploadImage(f).then(function (url) { row.querySelector('.p-image').value = url; }).catch(function (e) { toast('Hata: ' + e.message, 'error'); }); });
+      row.querySelector('.p-pick-icon').addEventListener('click', function () { currentIconInput = row.querySelector('.p-icon'); openIconPicker(); });
+      bindColor(row);
+      row.querySelector('.p-save').addEventListener('click', function () {
+        var pid = row.getAttribute('data-pid');
+        var iconVal = row.querySelector('.p-icon').value.trim() || 'fa-solid fa-box';
+        db.collection('products').doc(pid).set({ name: row.querySelector('.p-name').value.trim(), platform: row.querySelector('.p-platform').value.trim(), status: row.querySelector('.p-status').value, order: parseInt(row.querySelector('.p-order').value, 10) || 0, image: row.querySelector('.p-image').value.trim(), download: row.querySelector('.p-download').value.trim(), color: row.querySelector('.p-color').value || '#06b6d4', icon: iconVal, pIcon: iconVal, desc: { en: row.querySelector('.p-desc-en').value, tr: row.querySelector('.p-desc-tr').value }, features: { en: row.querySelector('.p-feat-en').value.split('\n').map(function (s) { return s.trim(); }).filter(Boolean), tr: row.querySelector('.p-feat-tr').value.split('\n').map(function (s) { return s.trim(); }).filter(Boolean) }, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }).then(function () { toast('Ürün kaydedildi', 'success'); logAction('update_product', 'Ürün güncellendi: ' + row.querySelector('.p-name').value); loadAll(); }).catch(function (e) { toast('Hata: ' + e.message, 'error'); });
+      });
+      row.querySelector('.p-delete').addEventListener('click', function () {
+        if (!confirm('Silinsin mi?')) return;
+        db.collection('products').doc(row.getAttribute('data-pid')).delete().then(function () { toast('Ürün silindi', 'success'); logAction('delete_product', 'Ürün silindi'); loadAll(); }).catch(function (e) { toast('Hata: ' + e.message, 'error'); });
       });
     });
     var ap = $('#btn-add-product');
@@ -210,6 +352,3 @@
     }).catch(function () { var r = $('#recent-logs'); if (r) r.innerHTML = '<div class="log-empty">Aktivite yüklenemedi.</div>'; });
   }
 })();
-
-
-                                                  
