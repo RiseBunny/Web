@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#08050f" />
+<title data-i18n-title="privacy.title">Gizlilik Politikası · RiseBunny</title>
+<style>
+:root{
+  --bg:#08050f;
+  --card:rgba(255,255,255,.045); --card-h:rgba(255,255,255,.075);
+  --border:rgba(168,85,247,.22);
+  --purple:#7c3aed; --purple-2:#a855f7; --purple-3:#c084fc;
+  --discord:#5865F2;
+  --text:#f1eefb; --muted:#a79ec7; --r:20px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:"Segoe UI",system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.75;overflow-x:hidden}
+.bg{position:fixed;inset:0;z-index:-2;background:
+  radial-gradient(1100px 650px at 85% -10%,rgba(124,58,237,.16),transparent 60%),
+  radial-gradient(900px 550px at -15% 45%,rgba(88,101,242,.10),transparent 60%),var(--bg)}
+#stars{position:fixed;inset:0;z-index:-1;pointer-events:none}
+.star{position:absolute;background:#fff;border-radius:50%;animation:tw var(--d) ease-in-out infinite alternate}
+@keyframes tw{from{opacity:.12;transform:scale(.7)}to{opacity:.85;transform:scale(1.15)}}
+
+nav{position:sticky;top:0;z-index:100;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);background:rgba(8,5,15,.6);border-bottom:1px solid var(--border)}
+.nav-in{max-width:980px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 24px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.1rem;color:var(--text);text-decoration:none}
+.logo em{font-style:normal;font-size:1.45rem;filter:drop-shadow(0 0 12px rgba(168,85,247,.8))}
+.nav-right{display:flex;gap:10px;align-items:center}
+.lang-toggle{display:inline-flex;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:4px;gap:2px}
+.lang-toggle button{background:transparent;border:0;color:var(--muted);padding:6px 12px;border-radius:7px;font-weight:700;font-size:.82rem;cursor:pointer;transition:.2s;font-family:inherit}
+.lang-toggle button.active{background:linear-gradient(135deg,var(--purple),var(--purple-2));color:#fff;box-shadow:0 2px 10px rgba(124,58,237,.4)}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border-radius:12px;font-weight:700;font-size:.9rem;text-decoration:none;transition:transform .2s,box-shadow .2s;border:1px solid transparent}
+.btn:active{transform:scale(.97)}
+.btn-discord{background:linear-gradient(135deg,var(--discord),var(--purple));color:#fff;box-shadow:0 4px 22px rgba(88,101,242,.35)}
+.btn-discord:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(88,101,242,.5)}
+
+.wrap{max-width:980px;margin:auto;padding:0 24px}
+header.hero{padding:72px 0 30px;text-align:center}
+.chip{display:inline-flex;align-items:center;gap:8px;padding:8px 18px;border-radius:999px;background:rgba(124,58,237,.14);border:1px solid var(--border);color:var(--purple-3);font-size:.85rem;font-weight:600}
+h1{font-size:clamp(2.2rem,6vw,3.6rem);font-weight:900;margin:22px 0 14px;letter-spacing:-.5px;
+  background:linear-gradient(100deg,#fff 20%,var(--purple-3) 60%,var(--purple-2));
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 0 26px rgba(124,58,237,.35))}
+.hero p{max-width:640px;margin:0 auto;color:var(--muted);font-size:1.05rem}
+.meta{margin-top:18px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.meta span{font-size:.8rem;color:var(--muted);background:var(--card);border:1px solid var(--border);padding:6px 14px;border-radius:999px}
+.toc{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:34px 0 10px}
+.toc a{padding:8px 16px;border-radius:999px;background:var(--card);border:1px solid var(--border);color:var(--muted);font-size:.85rem;font-weight:600;text-decoration:none;transition:.25s}
+.toc a:hover{color:#fff;border-color:var(--purple-2);background:rgba(124,58,237,.18);transform:translateY(-2px)}
+
+main{padding:26px 0 40px;display:grid;gap:22px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:30px 28px;backdrop-filter:blur(10px);transition:transform .3s,border-color .3s,background .3s;position:relative;overflow:hidden}
+.card::before{content:"";position:absolute;inset:0 0 auto 0;height:2px;background:linear-gradient(90deg,transparent,var(--purple-2),transparent);opacity:0;transition:.3s}
+.card:hover{transform:translateY(-4px);border-color:rgba(168,85,247,.45);background:var(--card-h)}
+.card:hover::before{opacity:1}
+.card h2{display:flex;align-items:center;gap:14px;font-size:1.25rem;margin-bottom:14px;color:#fff}
+.num{flex:none;display:grid;place-items:center;width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,var(--purple),var(--purple-2));font-size:1rem;font-weight:800;box-shadow:0 4px 18px rgba(124,58,237,.4)}
+.card p{color:#d6d0ea;margin-bottom:10px}
+.card p:last-child{margin-bottom:0}
+.card ul{margin:6px 0 4px 22px;color:#d6d0ea}
+.card li{margin-bottom:8px}
+.card li::marker{color:var(--purple-2)}
+.card strong{color:#fff}
+.hl{color:var(--purple-3)}
+
+.cta{margin:30px 0 10px;text-align:center;padding:44px 26px;border-radius:26px;background:linear-gradient(135deg,rgba(124,58,237,.22),rgba(88,101,242,.16));border:1px solid var(--border)}
+.cta h3{font-size:1.5rem;margin-bottom:8px}
+.cta p{color:var(--muted);margin-bottom:20px}
+
+footer{border-top:1px solid var(--border);padding:34px 0 44px;margin-top:30px;text-align:center;color:var(--muted);font-size:.88rem}
+footer .links{display:flex;gap:18px;justify-content:center;margin-bottom:14px;flex-wrap:wrap}
+footer a{color:var(--purple-3);text-decoration:none;font-weight:600}
+footer a:hover{color:#fff}
+
+.reveal{opacity:0;transform:translateY(26px);transition:opacity .7s ease,transform .7s ease}
+.reveal.on{opacity:1;transform:none}
+
+[data-i18n]{display:none}
+html[lang="tr"] [data-i18n="tr"]{display:inline}
+html[lang="en"] [data-i18n="en"]{display:inline}
+html[lang="tr"] [data-i18n-block="tr"]{display:block}
+html[lang="en"] [data-i18n-block="en"]{display:block}
+html[lang="tr"] [data-i18n-li="tr"]{display:list-item}
+html[lang="en"] [data-i18n-li="en"]{display:list-item}
+
+@media(max-width:600px){
+  .card{padding:24px 20px}
+  header.hero{padding-top:52px}
+  .btn-discord span{display:none}
+}
+</style>
+</head>
+<body>
+<div class="bg"></div><div id="stars"></div>
+
+<nav><div class="nav-in">
+  <a class="logo" href="/"><em>🐰</em> RiseBunny</a>
+  <div class="nav-right">
+    <div class="lang-toggle" role="tablist" aria-label="Dil seçimi">
+      <button data-lang="tr" class="active" aria-pressed="true">TR</button>
+      <button data-lang="en" aria-pressed="false">EN</button>
+    </div>
+    <a class="btn btn-discord" href="https://share.google/W05uUtsltZUcx9fne" target="_blank" rel="noopener">💬 <span>Discord</span></a>
+  </div>
+</div></nav>
+
+<div class="wrap">
+  <header class="hero">
+    <span class="chip">
+      <span data-i18n="tr">🔒 Hukuki · RiseBunny</span>
+      <span data-i18n="en">🔒 Legal · RiseBunny</span>
+    </span>
+    <h1>
+      <span data-i18n="tr">Gizlilik Politikası</span>
+      <span data-i18n="en">Privacy Policy</span>
+    </h1>
+    <p>
+      <span data-i18n="tr">Verilerin bizim için kutsaldır. Bu sayfa, risebunny.vercel.app hizmetlerinde hangi verilerin nasıl işlendiğini açık ve net şekilde anlatır.</span>
+      <span data-i18n="en">Your data is sacred to us. This page clearly explains what data is processed and how within risebunny.vercel.app services.</span>
+    </p>
+    <div class="meta">
+      <span>
+        <span data-i18n="tr">📅 Son güncelleme: 16 Ağustos 2026</span>
+        <span data-i18n="en">📅 Last updated: August 16, 2026</span>
+      </span>
+      <span>
+        <span data-i18n="tr">⏱️ 3 dk okuma</span>
+        <span data-i18n="en">⏱️ 3 min read</span>
+      </span>
+    </div>
+    <div class="toc">
+      <a href="#s1"><span data-i18n="tr">Genel</span><span data-i18n="en">Overview</span></a>
+      <a href="#s2"><span data-i18n="tr">Toplanan Veriler</span><span data-i18n="en">Data Collected</span></a>
+      <a href="#s3"><span data-i18n="tr">Kullanım</span><span data-i18n="en">Usage</span></a>
+      <a href="#s4"><span data-i18n="tr">Çerezler</span><span data-i18n="en">Cookies</span></a>
+      <a href="#s5"><span data-i18n="tr">Güvenlik</span><span data-i18n="en">Security</span></a>
+      <a href="#s6"><span data-i18n="tr">Hakların</span><span data-i18n="en">Your Rights</span></a>
+      <a href="#s7"><span data-i18n="tr">Üçüncü Taraf</span><span data-i18n="en">Third Parties</span></a>
+      <a href="#s8"><span data-i18n="tr">Değişiklikler</span><span data-i18n="en">Changes</span></a>
+    </div>
+  </header>
+
+  <main>
+    <section class="card reveal" id="s1">
+      <h2><span class="num">1</span>
+        <span data-i18n="tr">📖 Genel Bakış</span>
+        <span data-i18n="en">📖 Overview</span>
+      </h2>
+      <p>
+        <span data-i18n="tr">RiseBunny ("biz"), tamamen ücretsiz yazılımlar üreten anonim bir topluluk projesidir. Web sitemizi, Discord botlarımızı veya diğer hizmetlerimizi kullandığında bu politika geçerlidir.</span>
+        <span data-i18n="en">RiseBunny ("we", "us") is an anonymous community project producing completely free software. This policy applies when you use our website, Discord bots, or other services.</span>
+      </p>
+      <p>
+        <span class="hl">
+          <span data-i18n="tr">Özet:</span>
+          <span data-i18n="en">Summary:</span>
+        </span>
+        <span data-i18n="tr"> Minimum veri toplarız, hiçbir şeyi satmayız, her şeyi şeffaf tutarız.</span>
+        <span data-i18n="en"> We collect minimal data, sell nothing, and keep everything transparent.</span>
+      </p>
+    </section>
+
+    <section class="card reveal" id="s2">
+      <h2><span class="num">2</span>
+        <span data-i18n="tr">📦 Topladığımız Bilgiler</span>
+        <span data-i18n="en">📦 Information We Collect</span>
+      </h2>
+      <ul>
+        <li>
+          <span data-i18n="tr"><strong>İletişim formu:</strong> Gönderdiğin ad, kullanıcı adı ve mesaj içeriği — yalnızca sen yazarsan.</span>
+          <span data-i18n="en"><strong>Contact form:</strong> The name, username, and message content you send — only when you choose to.</span>
+        </li>
+        <li>
+          <span data-i18n="tr"><strong>Discord botları:</strong> Komut kullanım logları ve kullanıcı ID'si. DM'lerin ve özel verilerin <strong>asla</strong> okunmaz.</span>
+          <span data-i18n="en"><strong>Discord bots:</strong> Command usage logs and user ID. Your DMs and private data are <strong>never</strong> read.</span>
+        </li>
+        <li>
+          <span data-i18n="tr"><strong>Otomatik loglar:</strong> IP adresi, tarayıcı tipi, ziyaret saati — sadece güvenlik ve istatistik için.</span>
+          <span data-i18n="en"><strong>Automatic logs:</strong> IP address, browser type, visit time — only for security and analytics.</span>
+        </li>
+      </ul>
+    </section>
+
+    <section class="card reveal" id="s3">
+      <h2><span class="num">3</span>
+        <span data-i18n="tr">🎯 Verileri Nasıl Kullanıyoruz?</span>
+        <span data-i18n="en">🎯 How We Use Your Data</span>
+      </h2>
+      <ul>
+        <li>
+          <span data-i18n="tr">Hizmetleri çalıştırmak, geliştirmek ve hataları düzeltmek,</span>
+          <span data-i18n="en">To operate, improve, and fix our services,</span>
+        </li>
+        <li>
+          <span data-i18n="tr">Destek taleplerine yanıt vermek,</span>
+          <span data-i18n="en">To respond to support requests,</span>
+        </li>
+        <li>
+          <span data-i18n="tr">Raid, spam ve kötüye kullanımı engellemek.</span>
+          <span data-i18n="en">To prevent raids, spam, and abuse.</span>
+        </li>
+      </ul>
+      <p>
+        <span data-i18n="tr"><strong>Verilerin asla satılmaz, reklam amaçlı kullanılmaz ve üçüncü taraflarla paylaşılmaz.</strong></span>
+        <span data-i18n="en"><strong>Your data is never sold, never used for advertising, and never shared with third parties.</strong></span>
+      </p>
+    </section>
+
+    <section class="card reveal" id="s4">
+      <h2><span class="num">4</span>
+        <span data-i18n="tr">🍪 Çerezler (Cookies)</span>
+        <span data-i18n="en">🍪 Cookies</span>
+      </h2>
+      <p>
+        <span data-i18n="tr">Sitemiz yalnızca sitenin çalışması için gerekli teknik çerezleri kullanır. Reklam veya izleme çerezi <strong>bulunmaz</strong>. Tarayıcından çerezleri istediğin an temizleyebilirsin.</span>
+        <span data-i18n="en">Our site only uses technical cookies required for it to function. There are <strong>no</strong> advertising or tracking cookies. You can clear cookies from your browser at any time.</span>
+      </p>
+    </section>
+
+    <section class="card reveal" id="s5">
+      <h2><span class="num">5</span>
+        <span data-i18n="tr">🛡️ Veri Güvenliği</span>
+        <span data-i18n="en">🛡️ Data Security</span>
+      </h2>
+      <p>
+        <span data-i18n="tr">Tüm bağlantılar HTTPS ile şifrelenir. Loglar yalnızca yetkili ekip üyelerince erişilebilen ortamlarda saklanır ve gereksiz veriler periyodik olarak silinir.</span>
+        <span data-i18n="en">All connections are encrypted via HTTPS. Logs are stored in environments accessible only to authorized team members, and unnecessary data is periodically deleted.</span>
+      </p>
+    </section>
+
+    <section class="card reveal" id="s6">
+      <h2><span class="num">6</span>
+        <span data-i18n="tr">✨ Hakların</span>
+        <span data-i18n="en">✨ Your Rights</span>
+      </h2>
+      <ul>
+        <li>
+          <span data-i18n="tr">Hakkındaki verilere erişme,</span>
+          <span data-i18n="en">Access your data,</span>
+        </li>
+        <li>
+          <span data-i18n="tr">Düzeltilmesini veya tamamen silinmesini isteme,</span>
+          <span data-i18n="en">Request correction or full deletion,</span>
+        </li>
+        <li>
+          <span data-i18n="tr">İşlemeye itiraz etme.</span>
+          <span data-i18n="en">Object to processing.</span>
+        </li>
+      </ul>
+      <p>
+        <span data-i18n="tr">Bu hakları kullanmak için Discord sunucumuzdan bize ulaşman yeterli — talepler en geç 7 gün içinde yanıtlanır.</span>
+        <span data-i18n="en">To exercise these rights, simply contact us on our Discord server — requests are answered within 7 days at most.</span>
+      </p>
+    </section>
+
+    <section class="card reveal" id="s7">
+      <h2><span class="num">7</span>
+        <span data-i18n="tr">🌐 Üçüncü Taraf Hizmetler</span>
+        <span data-i18n="en">🌐 Third-Party Services</span>
+      </h2>
+      <p>
+        <span data-i18n="tr">Site <strong>Vercel</strong> üzerinde barındırılır; Discord hizmetleri <strong>Discord Inc.</strong> altyapısını kullanır. Bu platformların kendi gizlilik politikaları geçerlidir.</span>
+        <span data-i18n="en">The site is hosted on <strong>Vercel</strong>; Discord services use <strong>Discord Inc.</strong> infrastructure. Each platform's own privacy policy applies.</span>
+      </p>
+    </section>
+
+    <section class="card reveal" id="s8">
+      <h2><span class="num">8</span>
+        <span data-i18n="tr">🔄 Değişiklikler</span>
+        <span data-i18n="en">🔄 Changes</span>
+      </h2>
+      <p>
+        <span data-i18n="tr">Bu politika zaman zaman güncellenebilir. Güncel sürüm her zaman bu sayfada yayınlanır; önemli değişikliklerde Discord sunucusundan duyuru yapılır.</span>
+        <span data-i18n="en">This policy may be updated from time to time. The current version is always published on this page; significant changes are announced on our Discord server.</span>
+      </p>
+    </section>
+
+    <section class="cta reveal">
+      <h3>
+        <span data-i18n="tr">Sorun mu var? 🐰</span>
+        <span data-i18n="en">Got a question? 🐰</span>
+      </h3>
+      <p>
+        <span data-i18n="tr">Gizliliğinle ilgili her konuda bize Discord üzerinden ulaşabilirsin.</span>
+        <span data-i18n="en">Reach out to us on Discord for anything related to your privacy.</span>
+      </p>
+      <a class="btn btn-discord" href="https://share.google/W05uUtsltZUcx9fne" target="_blank" rel="noopener">💬 
+        <span>
+          <span data-i18n="tr">Discord'a Katıl</span>
+          <span data-i18n="en">Join Discord</span>
+        </span>
+      </a>
+    </section>
+  </main>
+
+  <footer>
+    <div class="links">
+      <a href="/"><span data-i18n="tr">Ana Sayfa</span><span data-i18n="en">Home</span></a>
+      <a href="/terms"><span data-i18n="tr">Kullanım Şartları</span><span data-i18n="en">Terms</span></a>
+      <a href="https://share.google/W05uUtsltZUcx9fne" target="_blank" rel="noopener">Discord</a>
+    </div>
+    © 2026 RiseBunny Software · 
+    <span data-i18n="tr">Geleceği Bu Günden Yaşa!</span>
+    <span data-i18n="en">Live the Future Today!</span>
+  </footer>
+</div>
+
+<script>
+const s=document.getElementById('stars');
+for(let i=0;i<90;i++){
+  const d=document.createElement('div');d.className='star';
+  const z=Math.random()*2.4+.6;
+  d.style.width=d.style.height=z+'px';
+  d.style.left=Math.random()*100+'%';
+  d.style.top=Math.random()*100+'%';
+  d.style.setProperty('--d',(Math.random()*3+1.5)+'s');
+  const r=Math.random();
+  if(r>.85)d.style.background='#a855f7';else if(r>.7)d.style.background='#7dd3fc';
+  s.appendChild(d);
+}
+
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('on');io.unobserve(e.target)}}),{threshold:.12});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+
+// === Dil Sistemi ===
+const titles={tr:"Gizlilik Politikası · RiseBunny",en:"Privacy Policy · RiseBunny"};
+function setLang(lang){
+  document.documentElement.lang=lang;
+  document.title=titles[lang];
+  document.querySelectorAll('.lang-toggle button').forEach(b=>{
+    const active=b.dataset.lang===lang;
+    b.classList.toggle('active',active);
+    b.setAttribute('aria-pressed',active);
+  });
+  try{localStorage.setItem('rb_lang',lang)}catch(e){}
+}
+document.querySelectorAll('.lang-toggle button').forEach(b=>{
+  b.addEventListener('click',()=>setLang(b.dataset.lang));
+});
+const params=new URLSearchParams(location.search);
+const saved=typeof localStorage!=='undefined'&&localStorage.getItem('rb_lang');
+setLang(params.get('lang')||(saved||'tr'));
+</script>
+</body>
+</html>
