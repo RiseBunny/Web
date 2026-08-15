@@ -59,16 +59,16 @@ window.RB_DATA = (function () {
         id: 'f2', order: 1,
         q: { en: 'Is everything really free?', tr: 'Her şey gerçekten ücretsiz mi?' },
         a: {
-          en: 'Yes. Every RiseBunny project is free and stays free. Support is optional; gratitude accepted in bunny emojis.',
-          tr: 'Evet. Tüm RiseBunny projeleri ücretsizdir ve ücretsiz kalacaktır. Destek opsiyoneldir; minnet, tavşan emojisiyle kabul edilir.'
+          en: 'Yes. Every RiseBunny project is free and will stay free, Supporting Us Optional.',
+          tr: 'Evet. Tüm RiseBunny projeleri ücretsizdir ve ücretsiz kalacaktır. Destek opsiyoneldir.'
         }
       },
       {
         id: 'f3', order: 2,
         q: { en: 'Where do updates drop first?', tr: 'Güncellemeler ilk nerede yayınlanır?' },
         a: {
-          en: 'On our Discord server and TikTok account. The website changelogs follow right after.',
-          tr: 'Discord sunucumuzda ve TikTok hesabımızda. Site güncelleme notları hemen ardından gelir.'
+          en: 'You Can Check Our Discord, Tiktok, Telegram And Changelogs On Website for updates',
+          tr: 'Güncellemeler için Discord, Tiktok, Telegram Ve Web Sitemizdeki Sürüm Notlarına Bakabilirsiniz'
         }
       }
     ],
@@ -76,22 +76,22 @@ window.RB_DATA = (function () {
       {
         id: 'v1', order: 0, icon: 'fa-solid fa-infinity', color: '#7c3aed',
         title: { en: 'Non-Stop Shipping', tr: 'Durmadan Yayınlıyoruz' },
-        desc: { en: 'Updates land weekly. The bunny does not sleep, and neither do our pipelines.', tr: 'Güncellemeler haftalık gelir. Tavşan uyumaz; biz de.' }
+        desc: { en: 'Updates Land Very often. Bunny doesnt sleep, and neither do we', tr: 'Güncellemeler Çok Sık Yayınlanır, Tavşan uyumaz, biz de.' }
       },
       {
         id: 'v2', order: 1, icon: 'fa-solid fa-shield-halved', color: '#10b981',
-        title: { en: 'Raid-Proof by Design', tr: 'Raid Dayanıklı Tasarım' },
+        title: { en: 'Raid-Proof by Design', tr: 'Raidlere karşı Korumalı Tasarım' },
         desc: { en: 'Protection systems born from real Discord raids and real lag spikes.', tr: 'Gerçek Discord raidlerinden ve gerçek lag anlarından doğan koruma sistemleri.' }
       },
       {
         id: 'v3', order: 2, icon: 'fa-solid fa-users', color: '#06b6d4',
-        title: { en: 'Community-First', tr: 'Topluluk Önce' },
-        desc: { en: 'Subscriber roles, TikTok drops, Discord events — you build this with us.', tr: 'Abone rolleri, TikTok paylaşımları, Discord etkinlikleri — bunu bizimle birlikte inşa edersin.' }
+        title: { en: 'Community-First', tr: 'Topluluk Öncelik' },
+        desc: { en: 'Community Opinions Are #1 For Our Changes, We Build For You — you build this with us.', tr: 'Topluluk Fikirleri Bizim #1 Önceliğimizdir, Sizin İçin İnşa ederiz — bunu bizimle birlikte inşa edersiniz.' }
       },
       {
         id: 'v4', order: 3, icon: 'fa-solid fa-gauge-high', color: '#f59e0b',
-        title: { en: 'FPS Obsessed', tr: 'FPS Takıntısı' },
-        desc: { en: 'If it can run faster, we are not done yet. Every frame matters.', tr: 'Daha hızlı çalışabiliyorsa, işimiz bitmemiştir. Her kare önemlidir.' }
+        title: { en: 'Use It Without Getting Caught By Anti-Cheats', tr: 'Anti-Hilelere Takılmadan Kullan' },
+        desc: { en: 'If Your Client Can Bypass Then Who Cares Making Good Configs', tr: 'Eğer Clientin Anti-Hileleri Bypasslayabiliyorsa Kim Neden İyi Bi Config Yapmaya Ugraşsın Ki' }
       }
     ],
     i18n: {
