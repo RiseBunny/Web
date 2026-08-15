@@ -1,93 +1,153 @@
-/*! RiseBunny — Varsayılan Veriler (Sıfırdan, temiz) */
 window.RB_DATA = (function () {
   'use strict';
   return {
     products: [
       {
+        id: 'risebunny-bot', icon: 'fa-brands fa-discord', pIcon: 'fa-brands fa-discord',
+        platform: 'Discord', status: 'active', order: 0, name: 'RiseBunny Bot',
+        color: '#7c3aed', image: '', download: 'https://top.gg/bot/1152613347708125194',
+        desc: {
+          en: 'Our multi-purpose Discord bot, live on top.gg: AI registration, subscriber roles, economy, moderation and automated raid protection — updated non-stop. Live the Future Today!',
+          tr: "top.gg'de yayında olan çok amaçlı Discord botumuz: Yapay zeka kayıt, abone rol sistemi, ekonomi, moderasyon ve otomatik koruma — sürekli güncel. Geleceği Bugünden Yaşa!"
+        },
+        features: {
+          en: ['AI-powered registration', 'Subscriber role system', 'Economy & fun commands', 'Automated protection'],
+          tr: ['Yapay zeka destekli kayıt', 'Abone rol sistemi', 'Ekonomi ve eğlence komutları', 'Otomatik koruma sistemleri']
+        }
+      },
+      {
         id: 'risebunny-client', icon: 'fa-solid fa-cube', pIcon: 'fa-solid fa-cube',
-        platform: 'Minecraft', status: 'dev', order: 0, name: 'RiseBunnyClient',
-        color: '#7c3aed', image: '', download: '',
-        desc: { en: 'A modern Minecraft client developed by RiseBunny.', tr: 'RiseBunny tarafından geliştirilen modern bir Minecraft istemcisi.' },
+        platform: 'Minecraft', status: 'dev', order: 1, name: 'RiseBunnyClient',
+        color: '#06b6d4', image: '', download: '',
+        desc: {
+          en: 'Our signature Minecraft client: deep customization, smooth experience and RiseBunny polish in every pixel.',
+          tr: 'İmza Minecraft istemcimiz: derin özelleştirme, akıcı deneyim ve her pikselde RiseBunny cilası.'
+        },
         features: { en: ['Performance-first', 'Deep customization'], tr: ['Performans odaklı', 'Derin özelleştirme'] }
       },
       {
         id: 'rubidium-client', icon: 'fa-solid fa-gem', pIcon: 'fa-solid fa-cube',
-        platform: 'Minecraft', status: 'dev', order: 1, name: 'Rubidium Client',
-        color: '#06b6d4', image: '', download: '',
-        desc: { en: 'A powerful Minecraft client.', tr: 'Güçlü bir Minecraft istemcisi.' },
-        features: { en: ['Smooth experience'], tr: ['Akıcı deneyim'] }
+        platform: 'Minecraft', status: 'dev', order: 2, name: 'Rubidium Client',
+        color: '#10b981', image: '', download: '',
+        desc: {
+          en: 'A performance-obsessed Minecraft client in the spirit of the legendary Sodium forks: more FPS, less lag, full control.',
+          tr: 'Efsanevi performans modlarının ruhunda, performans takıntılı bir Minecraft istemcisi: daha çok FPS, daha az lag, tam kontrol.'
+        },
+        features: { en: ['FPS obsession', 'Sodium-fork spirit'], tr: ['FPS takıntısı', 'Sodium-fork ruhu'] }
       },
       {
         id: 'risebrawl-v29', icon: 'fa-solid fa-star', pIcon: 'fa-solid fa-star',
-        platform: 'Brawl Stars', status: 'project', order: 2, name: 'RiseBrawl V29',
+        platform: 'Brawl Stars', status: 'project', order: 3, name: 'RiseBrawl V29',
         color: '#f59e0b', image: '', download: '',
-        desc: { en: 'Brawl Stars V29 project.', tr: 'Brawl Stars V29 projesi.' },
+        desc: {
+          en: 'A Brawl Stars V29 playground project: custom vibes, unique experiences, pure nostalgia.',
+          tr: 'Brawl Stars V29 oyun alanı projemiz: özel havalar, benzersiz deneyimler, saf nostalji.'
+        },
         features: { en: ['Unique experience'], tr: ['Benzersiz deneyim'] }
       }
     ],
     faqs: [
-      { id: 'f1', order: 0, q: { en: 'What is RiseBunny?', tr: 'RiseBunny nedir?' }, a: { en: 'A software company focused on gaming clients and community tools.', tr: 'Oyun istemcileri ve topluluk araçlarına odaklanan bir yazılım şirketidir.' } },
-      { id: 'f2', order: 1, q: { en: 'Are projects free?', tr: 'Projeler ücretsiz mi?' }, a: { en: 'Most of our projects are free.', tr: 'Projelerimizin çoğu ücretsizdir.' } },
-      { id: 'f3', order: 2, q: { en: 'How can I contact you?', tr: 'Size nasıl ulaşırım?' }, a: { en: 'Use the contact form below.', tr: 'Aşağıdaki iletişim formunu kullanın.' } }
+      {
+        id: 'f1', order: 0,
+        q: { en: 'What exactly is RiseBunny?', tr: 'RiseBunny tam olarak nedir?' },
+        a: {
+          en: 'An indie software crew under RiseBunny Software: one Discord bot, two Minecraft clients, one Brawl Stars project and a growing community.',
+          tr: 'RiseBunny Software çatısında bir indie yazılım ekibi: bir Discord botu, iki Minecraft istemcisi, bir Brawl Stars projesi ve büyüyen bir topluluk.'
+        }
+      },
+      {
+        id: 'f2', order: 1,
+        q: { en: 'Is everything really free?', tr: 'Her şey gerçekten ücretsiz mi?' },
+        a: {
+          en: 'Yes. Every RiseBunny project is free and stays free. Support is optional; gratitude accepted in bunny emojis.',
+          tr: 'Evet. Tüm RiseBunny projeleri ücretsizdir ve ücretsiz kalacaktır. Destek opsiyoneldir; minnet, tavşan emojisiyle kabul edilir.'
+        }
+      },
+      {
+        id: 'f3', order: 2,
+        q: { en: 'Where do updates drop first?', tr: 'Güncellemeler ilk nerede yayınlanır?' },
+        a: {
+          en: 'On our Discord server and TikTok account. The website changelogs follow right after.',
+          tr: 'Discord sunucumuzda ve TikTok hesabımızda. Site güncelleme notları hemen ardından gelir.'
+        }
+      }
     ],
     features: [
-      { id: 'v1', order: 0, icon: 'fa-solid fa-lightbulb', color: '#7c3aed', title: { en: 'Innovation', tr: 'İnovasyon' }, desc: { en: 'We build what others do not.', tr: 'Başkalarının yapmadığını inşa ederiz.' } },
-      { id: 'v2', order: 1, icon: 'fa-solid fa-bolt', color: '#06b6d4', title: { en: 'Performance', tr: 'Performans' }, desc: { en: 'Fast and smooth by default.', tr: 'Varsayılan olarak hızlı ve akıcı.' } },
-      { id: 'v3', order: 2, icon: 'fa-solid fa-users', color: '#10b981', title: { en: 'Community', tr: 'Topluluk' }, desc: { en: 'Built with and for the community.', tr: 'Toplulukla ve topluluk için geliştirilir.' } },
-      { id: 'v4', order: 3, icon: 'fa-solid fa-shield-halved', color: '#f59e0b', title: { en: 'Security', tr: 'Güvenlik' }, desc: { en: 'Safety first in every release.', tr: 'Her sürümde önce güvenlik.' } }
+      {
+        id: 'v1', order: 0, icon: 'fa-solid fa-infinity', color: '#7c3aed',
+        title: { en: 'Non-Stop Shipping', tr: 'Durmadan Yayınlıyoruz' },
+        desc: { en: 'Updates land weekly. The bunny does not sleep, and neither do our pipelines.', tr: 'Güncellemeler haftalık gelir. Tavşan uyumaz; biz de.' }
+      },
+      {
+        id: 'v2', order: 1, icon: 'fa-solid fa-shield-halved', color: '#10b981',
+        title: { en: 'Raid-Proof by Design', tr: 'Raid Dayanıklı Tasarım' },
+        desc: { en: 'Protection systems born from real Discord raids and real lag spikes.', tr: 'Gerçek Discord raidlerinden ve gerçek lag anlarından doğan koruma sistemleri.' }
+      },
+      {
+        id: 'v3', order: 2, icon: 'fa-solid fa-users', color: '#06b6d4',
+        title: { en: 'Community-First', tr: 'Topluluk Önce' },
+        desc: { en: 'Subscriber roles, TikTok drops, Discord events — you build this with us.', tr: 'Abone rolleri, TikTok paylaşımları, Discord etkinlikleri — bunu bizimle birlikte inşa edersin.' }
+      },
+      {
+        id: 'v4', order: 3, icon: 'fa-solid fa-gauge-high', color: '#f59e0b',
+        title: { en: 'FPS Obsessed', tr: 'FPS Takıntısı' },
+        desc: { en: 'If it can run faster, we are not done yet. Every frame matters.', tr: 'Daha hızlı çalışabiliyorsa, işimiz bitmemiştir. Her kare önemlidir.' }
+      }
     ],
     i18n: {
       en: {
         nav_home: 'Home', nav_products: 'Products', nav_about: 'About', nav_faq: 'FAQ', nav_contact: 'Contact',
-        hero_badge: 'RiseBunny Software',
-        hero_title: 'Rise <span class="gradient-text">Beyond Limits.</span>',
-        hero_sub: 'Innovative software. Powerful experiences. Built by RiseBunny.',
-        hero_desc: 'RiseBunny develops innovative gaming clients, game projects and community-focused software.',
-        btn_explore: 'Explore Products', btn_learn: 'Learn More',
-        prod_title: 'Our Products', prod_sub: 'Explore the software and projects built by RiseBunny.',
-        view_details: 'View Details', status_dev: 'In Development', status_project: 'Project', status_active: 'Active',
-        feat_title: 'Why RiseBunny?', feat_sub: 'The values that drive everything we build.',
-        about_title: 'Built to Rise.',
-        about_p1: 'RiseBunny is a software company focused on creating innovative gaming software, custom clients and community tools.',
-        about_p2: 'We bridge the gap between complex technology and great user experience.',
-        eco_title: 'Our Ecosystem', eco_sub: 'The platforms RiseBunny builds for.',
-        faq_title: 'Frequently Asked Questions',
-        contact_title: "Let's Build Something Great.", contact_sub: 'Have a question, collaboration idea or feedback?',
-        discord_title: 'Join Our Community', discord_desc: 'Our Discord invite link will be shared here very soon.',
+        hero_badge: '🐰 RiseBunny Software — Live the Future Today',
+        hero_title: 'We Code All Night. <span class="gradient-text">You Rise All Day.</span>',
+        hero_sub: 'Discord bots, Minecraft clients, Brawl Stars projects — one bunny crew.',
+        hero_desc: 'From the RiseBunny Bot guarding servers 24/7 to Rubidium Client squeezing every frame: we build, ship and polish — non-stop.',
+        btn_explore: 'Explore the Lab', btn_learn: 'Meet the Crew',
+        prod_title: 'The Project Lab', prod_sub: 'Everything below is designed, coded and shipped under RiseBunny Software.',
+        view_details: 'Inspect', status_dev: 'In the Lab', status_project: 'Prototype', status_active: 'Live 24/7',
+        feat_title: 'Why the Bunny Never Sleeps', feat_sub: 'Four obsessions behind every release.',
+        about_title: 'Born to Rise.',
+        about_p1: 'RiseBunny started as a small crew shipping a Discord bot with AI registration, subscriber roles, economy and raid-proof protection. Today the same crew builds Minecraft clients and game projects.',
+        about_p2: 'One rule never changed: ship fast, update constantly, and keep every project free for the community.',
+        eco_title: 'Where We Operate', eco_sub: 'If there is an API out there, we are probably building for it.',
+        faq_title: 'Questions? We Answer Fast.',
+        contact_title: 'Got an Idea? Let Us Build It.', contact_sub: 'Feedback, collabs, bug reports or wild ideas — the inbox is open.',
+        discord_title: 'Join the War Room', discord_desc: 'New builds drop on our Discord first. The invite link lands here very soon.',
         lbl_name: 'Name', lbl_email: 'Email', lbl_subject: 'Subject', lbl_message: 'Message',
         ph_name: 'Your name', ph_email: 'you@example.com', ph_subject: 'Subject', ph_message: 'Your message...',
-        btn_send: 'Send Message', btn_sending: 'Sending…', form_success: 'Message sent!', form_mailto: 'Opening email app…',
-        form_note: 'Your message is transmitted over an encrypted connection.',
+        btn_send: 'Send It', btn_sending: 'Flying…', form_success: 'Message landed!', form_mailto: 'Opening your mail app…',
+        form_note: 'Encrypted end-to-end. No spam, ever.',
         footer_slogan: 'Rise Beyond Limits.', footer_nav: 'Navigation', footer_legal: 'Legal', footer_contact: 'Contact',
         privacy: 'Privacy Policy', terms: 'Terms of Service',
         copyright: '© 2026 RiseBunny. All rights reserved.',
-        modal_features: 'Key Features', btn_community: 'Join Community', btn_download: 'Coming Soon', btn_download_now: 'Download'
+        modal_features: 'Under the Hood', btn_community: 'Join the Crew', btn_download: 'Cooking…', btn_download_now: 'Get It',
+        stat_cycle: 'Dev cycle', stat_free: 'Free forever', stat_excuses: 'Excuses', stat_ideas: 'Ideas in the backlog'
       },
       tr: {
         nav_home: 'Ana Sayfa', nav_products: 'Ürünler', nav_about: 'Hakkımızda', nav_faq: 'SSS', nav_contact: 'İletişim',
-        hero_badge: 'RiseBunny Yazılım',
-        hero_title: 'Sınırların <span class="gradient-text">Ötesine Yüksel.</span>',
-        hero_sub: 'Yenilikçi yazılım. Güçlü deneyimler. RiseBunny imzasıyla.',
-        hero_desc: 'RiseBunny; yenilikçi oyun istemcileri, oyun projeleri ve topluluk odaklı yazılımlar geliştirir.',
-        btn_explore: 'Ürünleri Keşfet', btn_learn: 'Daha Fazla',
-        prod_title: 'Ürünlerimiz', prod_sub: 'RiseBunny tarafından geliştirilen yazılım ve projeleri keşfedin.',
-        view_details: 'Detayları Gör', status_dev: 'Geliştirmede', status_project: 'Proje', status_active: 'Aktif',
-        feat_title: 'Neden RiseBunny?', feat_sub: 'Yaptığımız her şeyi yönlendiren değerler.',
-        about_title: 'Yükselmek İçin İnşa Edildi.',
-        about_p1: 'RiseBunny; yenilikçi oyun yazılımları, özel istemciler ve topluluk araçları geliştirmeye odaklanan bir yazılım şirketidir.',
-        about_p2: 'Karmaşık teknoloji ile harika kullanıcı deneyimi arasındaki köprüyü kurarız.',
-        eco_title: 'Ekosistemimiz', eco_sub: 'RiseBunny tarafından geliştirme yapılan platformlar.',
-        faq_title: 'Sıkça Sorulan Sorular',
-        contact_title: 'Harika Bir Şey İnşa Edelim.', contact_sub: 'Bir sorunuz, iş birliği fikriniz veya geri bildiriminiz mi var?',
-        discord_title: 'Topluluğumuza Katıl', discord_desc: 'Discord davet linkimiz çok yakında burada paylaşılacak.',
+        hero_badge: '🐰 RiseBunny Software — Geleceği Bugünden Yaşa',
+        hero_title: 'Biz Gece Kodlarız. <span class="gradient-text">Sen Gündüz Yükselirsin.</span>',
+        hero_sub: 'Discord botları, Minecraft istemcileri, Brawl Stars projeleri — tek tavşan ekibi.',
+        hero_desc: 'Sunucuları 7/24 koruyan RiseBunny Bot ile her kareyi zorlayan Rubidium Client aynı atölyeden çıkıyor: geliştir, yayınla, parlat — durmadan.',
+        btn_explore: 'Laboratuvarı Keşfet', btn_learn: 'Ekiple Tanış',
+        prod_title: 'Proje Laboratuvarı', prod_sub: 'Aşağıdaki her şey RiseBunny Software çatısında tasarlandı, kodlandı ve yayınlandı.',
+        view_details: 'İncele', status_dev: 'Laboratuvarda', status_project: 'Prototip', status_active: '7/24 Yayında',
+        feat_title: 'Tavşan Neden Uyumaz?', feat_sub: 'Her sürümün arkasındaki dört takıntı.',
+        about_title: 'Yükselmek İçin Doğduk.',
+        about_p1: 'RiseBunny; yapay zeka kayıt, abone rol sistemi, ekonomi ve raid dayanıklı koruma sunan bir Discord botuyla yola çıktı. Bugün aynı ekip Minecraft istemcileri ve oyun projeleri geliştiriyor.',
+        about_p2: 'Kural hiç değişmedi: hızlı yayınla, sürekli güncelle, her projeyi topluluk için ücretsiz tut.',
+        eco_title: 'Operasyon Sahalarımız', eco_sub: 'Bir yerlerde bir API varsa, biz orada geliştiriyoruz.',
+        faq_title: 'Sorun mu Var? Hızlı Cevaplar.',
+        contact_title: 'Fikrin mi Var? Biz İnşa Edelim.', contact_sub: 'Geri bildirim, iş birliği, hata raporu ya da çılgın fikirler — kutu açık.',
+        discord_title: 'Komuta Merkezine Katıl', discord_desc: 'Yeni buildler ilk olarak Discord sunucumuzda paylaşılır. Davet linki çok yakında burada.',
         lbl_name: 'İsim', lbl_email: 'E-posta', lbl_subject: 'Konu', lbl_message: 'Mesaj',
         ph_name: 'Adınız', ph_email: 'ornek@eposta.com', ph_subject: 'Konu', ph_message: 'Mesajınız...',
-        btn_send: 'Mesaj Gönder', btn_sending: 'Gönderiliyor…', form_success: 'Mesaj gönderildi!', form_mailto: 'E-posta uygulaması açılıyor…',
-        form_note: 'Mesajınız şifreli bağlantı üzerinden iletilir.',
+        btn_send: 'Gönder', btn_sending: 'Uçuyor…', form_success: 'Mesaj ulaştı!', form_mailto: 'E-posta uygulaması açılıyor…',
+        form_note: 'Uçtan uca şifreli. Spam yok, asla.',
         footer_slogan: 'Sınırların Ötesine Yüksel.', footer_nav: 'Navigasyon', footer_legal: 'Yasal', footer_contact: 'İletişim',
         privacy: 'Gizlilik Politikası', terms: 'Kullanım Şartları',
         copyright: '© 2026 RiseBunny. Tüm hakları saklıdır.',
-        modal_features: 'Öne Çıkan Özellikler', btn_community: 'Topluluğa Katıl', btn_download: 'Çok Yakında', btn_download_now: 'İndir'
+        modal_features: 'Kaputun Altında', btn_community: 'Ekibe Katıl', btn_download: 'Pişiyor…', btn_download_now: 'İndir',
+        stat_cycle: 'Geliştirme döngüsü', stat_free: 'Sonsuza dek ücretsiz', stat_excuses: 'Bahane', stat_ideas: 'Bekleyen fikir'
       }
     }
   };
