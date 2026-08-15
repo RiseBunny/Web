@@ -8,6 +8,11 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/admin.css">
+<style>
+.soc-input{position:relative}
+.soc-input i{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:.95rem;pointer-events:none}
+.soc-input input{padding-left:36px}
+</style>
 </head>
 <body>
 
@@ -45,6 +50,7 @@
     <button type="button" class="tab" data-tab="banner"><i class="fa-solid fa-bullhorn"></i> Banner</button>
     <button type="button" class="tab" data-tab="translations"><i class="fa-solid fa-language"></i> Çeviri</button>
     <button type="button" class="tab" data-tab="messages"><i class="fa-solid fa-envelope"></i> Mesajlar</button>
+    <button type="button" class="tab" data-tab="bans"><i class="fa-solid fa-user-slash"></i> Banlar</button>
     <button type="button" class="tab" data-tab="logs"><i class="fa-solid fa-clock-rotate-left"></i> Log</button>
   </nav>
 
@@ -73,7 +79,7 @@
         <label class="f-label">Logo URL</label>
         <div class="row-controls">
           <input type="text" id="inp-logo" placeholder="https://... veya data:">
-          <label class="btn btn-glow btn-sm" style="align-self:start"><i class="fa-solid fa-upload"></i> Logo Yükle<input type="file" id="logo-file" accept="image/*" hidden></label>
+          <label class="btn btn-glow btn-sm" style="align-self:start;justify-content:center"><i class="fa-solid fa-upload"></i> Logo Yükle<input type="file" id="logo-file" accept="image/*" hidden></label>
         </div>
         <label class="f-label">Sosyal Linkler</label>
         <div class="row-controls">
@@ -127,6 +133,11 @@
     <section class="tab-panel" data-panel="messages">
       <div class="panel-head"><h3>Gelen Mesajlar</h3><button type="button" id="btn-refresh-messages" class="btn btn-outline btn-sm"><i class="fa-solid fa-rotate"></i> Yenile</button></div>
       <div id="messages-list"></div>
+    </section>
+
+    <section class="tab-panel" data-panel="bans">
+      <div class="panel-head"><h3>Banlı Kullanıcılar</h3><button type="button" id="btn-refresh-bans" class="btn btn-outline btn-sm"><i class="fa-solid fa-rotate"></i> Yenile</button></div>
+      <div id="bans-list"></div>
     </section>
 
     <section class="tab-panel" data-panel="logs">
