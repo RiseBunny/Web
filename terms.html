@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="theme-color" content="#08050f" />
-<title data-i18n-title="terms.title">Kullanım Şartları · RiseBunny</title>
+<title>Kullanım Şartları · RiseBunny</title>
 <style>
 :root{
   --bg:#08050f;
@@ -29,28 +29,17 @@ nav{position:sticky;top:0;z-index:100;backdrop-filter:blur(16px);-webkit-backdro
 .nav-in{max-width:980px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 24px}
 .logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.1rem;color:var(--text);text-decoration:none}
 .logo em{font-style:normal;font-size:1.45rem;filter:drop-shadow(0 0 12px rgba(168,85,247,.8))}
-.nav-right{display:flex;gap:10px;align-items:center}
 .lang-toggle{display:inline-flex;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:4px;gap:2px}
 .lang-toggle button{background:transparent;border:0;color:var(--muted);padding:6px 12px;border-radius:7px;font-weight:700;font-size:.82rem;cursor:pointer;transition:.2s;font-family:inherit}
 .lang-toggle button.active{background:linear-gradient(135deg,var(--purple),var(--purple-2));color:#fff;box-shadow:0 2px 10px rgba(124,58,237,.4)}
-.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border-radius:12px;font-weight:700;font-size:.9rem;text-decoration:none;transition:transform .2s,box-shadow .2s;border:1px solid transparent}
-.btn:active{transform:scale(.97)}
-.btn-discord{background:linear-gradient(135deg,var(--discord),var(--purple));color:#fff;box-shadow:0 4px 22px rgba(88,101,242,.35)}
-.btn-discord:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(88,101,242,.5)}
 
 .wrap{max-width:980px;margin:auto;padding:0 24px}
 header.hero{padding:72px 0 30px;text-align:center}
-.chip{display:inline-flex;align-items:center;gap:8px;padding:8px 18px;border-radius:999px;background:rgba(124,58,237,.14);border:1px solid var(--border);color:var(--purple-3);font-size:.85rem;font-weight:600}
-h1{font-size:clamp(2.2rem,6vw,3.6rem);font-weight:900;margin:22px 0 14px;letter-spacing:-.5px;
+h1{font-size:clamp(2.2rem,6vw,3.6rem);font-weight:900;margin:0 0 14px;letter-spacing:-.5px;
   background:linear-gradient(100deg,#fff 20%,var(--purple-3) 60%,var(--purple-2));
   -webkit-background-clip:text;background-clip:text;color:transparent;
   filter:drop-shadow(0 0 26px rgba(124,58,237,.35))}
 .hero p{max-width:640px;margin:0 auto;color:var(--muted);font-size:1.05rem}
-.meta{margin-top:18px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
-.meta span{font-size:.8rem;color:var(--muted);background:var(--card);border:1px solid var(--border);padding:6px 14px;border-radius:999px}
-.toc{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:34px 0 10px}
-.toc a{padding:8px 16px;border-radius:999px;background:var(--card);border:1px solid var(--border);color:var(--muted);font-size:.85rem;font-weight:600;text-decoration:none;transition:.25s}
-.toc a:hover{color:#fff;border-color:var(--purple-2);background:rgba(124,58,237,.18);transform:translateY(-2px)}
 
 main{padding:26px 0 40px;display:grid;gap:22px}
 .card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:30px 28px;backdrop-filter:blur(10px);transition:transform .3s,border-color .3s,background .3s;position:relative;overflow:hidden}
@@ -65,13 +54,32 @@ main{padding:26px 0 40px;display:grid;gap:22px}
 .card li{margin-bottom:8px}
 .card li::marker{color:var(--purple-2)}
 .card strong{color:#fff}
-.hl{color:var(--purple-3)}
 .warn{border-left:3px solid var(--warn);background:var(--warn-bg);padding:18px 22px;border-radius:12px;margin-top:8px}
 .warn strong{color:var(--warn)}
 
-.cta{margin:30px 0 10px;text-align:center;padding:44px 26px;border-radius:26px;background:linear-gradient(135deg,rgba(124,58,237,.22),rgba(88,101,242,.16));border:1px solid var(--border)}
-.cta h3{font-size:1.5rem;margin-bottom:8px}
-.cta p{color:var(--muted);margin-bottom:20px}
+.cta{margin:30px 0 10px;text-align:center;padding:44px 26px;border-radius:26px;
+  background:linear-gradient(135deg,rgba(124,58,237,.22),rgba(88,101,242,.16));
+  border:1px solid var(--border)}
+.cta h3{font-size:1.5rem;margin-bottom:8px;color:#fff}
+.cta p{color:var(--muted);margin-bottom:28px}
+.discord-icon-btn{
+  display:inline-grid;place-items:center;width:72px;height:72px;
+  border-radius:50%;
+  background:linear-gradient(135deg,var(--discord),var(--purple));
+  box-shadow:0 8px 32px rgba(88,101,242,.45),0 0 0 1px rgba(168,85,247,.3) inset;
+  transition:transform .3s cubic-bezier(.2,.8,.2,1),box-shadow .3s;
+  text-decoration:none;
+  animation:pulse 2.8s ease-in-out infinite;
+}
+.discord-icon-btn:hover{
+  transform:translateY(-4px) scale(1.08);
+  box-shadow:0 14px 40px rgba(88,101,242,.65),0 0 0 1px rgba(168,85,247,.5) inset;
+}
+.discord-icon-btn svg{width:34px;height:34px;fill:#fff}
+@keyframes pulse{
+  0%,100%{box-shadow:0 8px 32px rgba(88,101,242,.45),0 0 0 0 rgba(88,101,242,.55)}
+  50%{box-shadow:0 8px 32px rgba(88,101,242,.45),0 0 0 14px rgba(88,101,242,0)}
+}
 
 footer{border-top:1px solid var(--border);padding:34px 0 44px;margin-top:30px;text-align:center;color:var(--muted);font-size:.88rem}
 footer .links{display:flex;gap:18px;justify-content:center;margin-bottom:14px;flex-wrap:wrap}
@@ -84,15 +92,10 @@ footer a:hover{color:#fff}
 [data-i18n]{display:none}
 html[lang="tr"] [data-i18n="tr"]{display:inline}
 html[lang="en"] [data-i18n="en"]{display:inline}
-html[lang="tr"] [data-i18n-block="tr"]{display:block}
-html[lang="en"] [data-i18n-block="en"]{display:block}
-html[lang="tr"] [data-i18n-li="tr"]{display:list-item}
-html[lang="en"] [data-i18n-li="en"]{display:list-item}
 
 @media(max-width:600px){
   .card{padding:24px 20px}
   header.hero{padding-top:52px}
-  .btn-discord span{display:none}
 }
 </style>
 </head>
@@ -101,21 +104,14 @@ html[lang="en"] [data-i18n-li="en"]{display:list-item}
 
 <nav><div class="nav-in">
   <a class="logo" href="/"><em>🐰</em> RiseBunny</a>
-  <div class="nav-right">
-    <div class="lang-toggle" role="tablist" aria-label="Dil seçimi">
-      <button data-lang="tr" class="active" aria-pressed="true">TR</button>
-      <button data-lang="en" aria-pressed="false">EN</button>
-    </div>
-    <a class="btn btn-discord" href="https://share.google/W05uUtsltZUcx9fne" target="_blank" rel="noopener">💬 <span>Discord</span></a>
+  <div class="lang-toggle" role="tablist" aria-label="Dil seçimi">
+    <button data-lang="tr" class="active" aria-pressed="true">TR</button>
+    <button data-lang="en" aria-pressed="false">EN</button>
   </div>
 </div></nav>
 
 <div class="wrap">
   <header class="hero">
-    <span class="chip">
-      <span data-i18n="tr">📜 Hukuki · RiseBunny</span>
-      <span data-i18n="en">📜 Legal · RiseBunny</span>
-    </span>
     <h1>
       <span data-i18n="tr">Kullanım Şartları</span>
       <span data-i18n="en">Terms of Service</span>
@@ -124,29 +120,10 @@ html[lang="en"] [data-i18n-li="en"]{display:list-item}
       <span data-i18n="tr">RiseBunny hizmetlerini kullanarak aşağıdaki şartları kabul etmiş olursun. Lütfen dikkatle oku.</span>
       <span data-i18n="en">By using RiseBunny services, you agree to the terms below. Please read carefully.</span>
     </p>
-    <div class="meta">
-      <span>
-        <span data-i18n="tr">📅 Son güncelleme: 16 Ağustos 2026</span>
-        <span data-i18n="en">📅 Last updated: August 16, 2026</span>
-      </span>
-      <span>
-        <span data-i18n="tr">⏱️ 4 dk okuma</span>
-        <span data-i18n="en">⏱️ 4 min read</span>
-      </span>
-    </div>
-    <div class="toc">
-      <a href="#s1"><span data-i18n="tr">Kapsam</span><span data-i18n="en">Scope</span></a>
-      <a href="#s2"><span data-i18n="tr">Kabul Edilen Kullanım</span><span data-i18n="en">Acceptable Use</span></a>
-      <a href="#s3"><span data-i18n="tr">Fikri Mülkiyet</span><span data-i18n="en">Intellectual Property</span></a>
-      <a href="#s4"><span data-i18n="tr">Sorumluluk</span><span data-i18n="en">Liability</span></a>
-      <a href="#s5"><span data-i18n="tr">Topluluk Kuralları</span><span data-i18n="en">Community Rules</span></a>
-      <a href="#s6"><span data-i18n="tr">Değişiklikler</span><span data-i18n="en">Changes</span></a>
-      <a href="#s7"><span data-i18n="tr">Hukuk</span><span data-i18n="en">Governing Law</span></a>
-    </div>
   </header>
 
   <main>
-    <section class="card reveal" id="s1">
+    <section class="card reveal">
       <h2><span class="num">1</span>
         <span data-i18n="tr">📦 Hizmetin Kapsamı</span>
         <span data-i18n="en">📦 Scope of Services</span>
@@ -157,24 +134,18 @@ html[lang="en"] [data-i18n-li="en"]{display:list-item}
       </p>
     </section>
 
-    <section class="card reveal" id="s2">
+    <section class="card reveal">
       <h2><span class="num">2</span>
         <span data-i18n="tr">✅ Kabul Edilen Kullanım</span>
         <span data-i18n="en">✅ Acceptable Use</span>
       </h2>
       <ul>
-        <li>
-          <span data-i18n="tr">Kişisel ve topluluk amaçlı kullanım serbesttir.</span>
-          <span data-i18n="en">Personal and community use is allowed.</span>
-        </li>
-        <li>
-          <span data-i18n="tr">Kaynak göstermeden yeniden dağıtım yasaktır.</span>
-          <span data-i18n="en">Redistribution without attribution is prohibited.</span>
-        </li>
-        <li>
-          <span data-i18n="tr">Hizmetleri yasa dışı faaliyetlerde (dolandırıcılık, saldırı vb.) kullanamazsın.</span>
-          <span data-i18n="en">You may not use the services for illegal activities (fraud, attacks, etc.).</span>
-        </li>
+        <li><span data-i18n="tr">Kişisel ve topluluk amaçlı kullanım serbesttir.</span>
+            <span data-i18n="en">Personal and community use is allowed.</span></li>
+        <li><span data-i18n="tr">Kaynak göstermeden yeniden dağıtım yasaktır.</span>
+            <span data-i18n="en">Redistribution without attribution is prohibited.</span></li>
+        <li><span data-i18n="tr">Hizmetleri yasa dışı faaliyetlerde (dolandırıcılık, saldırı vb.) kullanamazsın.</span>
+            <span data-i18n="en">You may not use the services for illegal activities (fraud, attacks, etc.).</span></li>
       </ul>
       <div class="warn">
         <strong>⚠️ 
@@ -186,7 +157,7 @@ html[lang="en"] [data-i18n-li="en"]{display:list-item}
       </div>
     </section>
 
-    <section class="card reveal" id="s3">
+    <section class="card reveal">
       <h2><span class="num">3</span>
         <span data-i18n="tr">©️ Fikri Mülkiyet</span>
         <span data-i18n="en">©️ Intellectual Property</span>
@@ -197,7 +168,7 @@ html[lang="en"] [data-i18n-li="en"]{display:list-item}
       </p>
     </section>
 
-    <section class="card reveal" id="s4">
+    <section class="card reveal">
       <h2><span class="num">4</span>
         <span data-i18n="tr">⚖️ Sorumluluk Reddi</span>
         <span data-i18n="en">⚖️ Disclaimer of Liability</span>
@@ -208,28 +179,22 @@ html[lang="en"] [data-i18n-li="en"]{display:list-item}
       </p>
     </section>
 
-    <section class="card reveal" id="s5">
+    <section class="card reveal">
       <h2><span class="num">5</span>
         <span data-i18n="tr">👥 Topluluk Kuralları</span>
         <span data-i18n="en">👥 Community Rules</span>
       </h2>
       <ul>
-        <li>
-          <span data-i18n="tr">Discord sunucusunda saygılı davranış zorunludur.</span>
-          <span data-i18n="en">Respectful behavior is required in our Discord server.</span>
-        </li>
-        <li>
-          <span data-i18n="tr">Spam, raid, nefret söylemi kalıcı ban sebebidir.</span>
-          <span data-i18n="en">Spam, raids, and hate speech result in permanent bans.</span>
-        </li>
-        <li>
-          <span data-i18n="tr">Moderasyon kararları nihaidir.</span>
-          <span data-i18n="en">Moderation decisions are final.</span>
-        </li>
+        <li><span data-i18n="tr">Discord sunucusunda saygılı davranış zorunludur.</span>
+            <span data-i18n="en">Respectful behavior is required in our Discord server.</span></li>
+        <li><span data-i18n="tr">Spam, raid, nefret söylemi kalıcı ban sebebidir.</span>
+            <span data-i18n="en">Spam, raids, and hate speech result in permanent bans.</span></li>
+        <li><span data-i18n="tr">Moderasyon kararları nihaidir.</span>
+            <span data-i18n="en">Moderation decisions are final.</span></li>
       </ul>
     </section>
 
-    <section class="card reveal" id="s6">
+    <section class="card reveal">
       <h2><span class="num">6</span>
         <span data-i18n="tr">🔄 Değişiklikler</span>
         <span data-i18n="en">🔄 Changes</span>
@@ -240,7 +205,7 @@ html[lang="en"] [data-i18n-li="en"]{display:list-item}
       </p>
     </section>
 
-    <section class="card reveal" id="s7">
+    <section class="card reveal">
       <h2><span class="num">7</span>
         <span data-i18n="tr">⚖️ Uygulanacak Hukuk</span>
         <span data-i18n="en">⚖️ Governing Law</span>
@@ -260,11 +225,10 @@ html[lang="en"] [data-i18n-li="en"]{display:list-item}
         <span data-i18n="tr">Soruların için Discord sunucumuz her zaman açık.</span>
         <span data-i18n="en">Our Discord server is always open for your questions.</span>
       </p>
-      <a class="btn btn-discord" href="https://share.google/W05uUtsltZUcx9fne" target="_blank" rel="noopener">💬 
-        <span>
-          <span data-i18n="tr">Discord'a Katıl</span>
-          <span data-i18n="en">Join Discord</span>
-        </span>
+      <a class="discord-icon-btn" href="https://share.google/W05uUtsltZUcx9fne" target="_blank" rel="noopener" aria-label="Discord">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M20.317 4.369A19.791 19.791 0 0 0 16.558 3c-.211.376-.442.867-.604 1.258a18.27 18.27 0 0 0-5.908 0A12.573 12.573 0 0 0 9.44 3a19.791 19.791 0 0 0-3.762 1.369C2.084 9.847 1.074 15.187 1.578 20.456a19.904 19.904 0 0 0 6.034 3.055 14.73 14.73 0 0 0 1.292-2.104 13.024 13.024 0 0 1-2.034-.972c.171-.124.337-.254.497-.387a14.217 14.217 0 0 0 12.266 0c.162.133.328.263.497.387a13.025 13.025 0 0 1-2.036.973c.374.652.798 1.27 1.292 2.104a19.893 19.893 0 0 0 6.034-3.055c.593-6.173-1.05-11.47-4.103-15.987zM9.681 17.328c-1.164 0-2.121-1.066-2.121-2.375 0-1.31.937-2.375 2.121-2.375 1.193 0 2.14 1.075 2.121 2.375 0 1.31-.938 2.375-2.121 2.375zm6.638 0c-1.164 0-2.12-1.066-2.12-2.375 0-1.31.937-2.375 2.12-2.375 1.193 0 2.14 1.075 2.121 2.375 0 1.31-.937 2.375-2.12 2.375z"/>
+        </svg>
       </a>
     </section>
   </main>
@@ -273,7 +237,6 @@ html[lang="en"] [data-i18n-li="en"]{display:list-item}
     <div class="links">
       <a href="/"><span data-i18n="tr">Ana Sayfa</span><span data-i18n="en">Home</span></a>
       <a href="/privacy"><span data-i18n="tr">Gizlilik Politikası</span><span data-i18n="en">Privacy</span></a>
-      <a href="https://share.google/W05uUtsltZUcx9fne" target="_blank" rel="noopener">Discord</a>
     </div>
     © 2026 RiseBunny Software · 
     <span data-i18n="tr">Yükselmek İçin Doğduk!</span>
@@ -294,11 +257,9 @@ for(let i=0;i<90;i++){
   if(r>.85)d.style.background='#a855f7';else if(r>.7)d.style.background='#7dd3fc';
   s.appendChild(d);
 }
-
 const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('on');io.unobserve(e.target)}}),{threshold:.12});
 document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
 
-// === Dil Sistemi ===
 const titles={tr:"Kullanım Şartları · RiseBunny",en:"Terms of Service · RiseBunny"};
 function setLang(lang){
   document.documentElement.lang=lang;
