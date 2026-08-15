@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Admin — RiseBunny</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+
+<div id="auth-screen" hidden>
+  <form id="login-form" class="login-card" autocomplete="on">
+    <div class="login-logo">🐰</div>
+    <h1>Admin Panel</h1>
+    <p>RiseBunny Yönetim Girişi</p>
+    <label>E-posta
+      <input type="email" id="login-email" required autocomplete="username">
+    </label>
+    <label>Şifre
+      <input type="password" id="login-pass" required autocomplete="current-password">
+    </label>
+    <button class="btn btn-primary" type="submit"><i class="fa-solid fa-right-to-bracket"></i> Giriş Yap</button>
+  </form>
+</div>
+
+<div id="panel" hidden>
+  <header class="admin-top">
+    <div class="admin-brand">🐰 RiseBunny<span>ADMIN</span></div>
+    <div class="admin-user">
+      <span id="user-email"></span>
+      <a class="btn btn-outline btn-sm" href="index.html" target="_blank"><i class="fa-solid fa-globe"></i> Site</a>
+      <button type="button" id="btn-logout" class="btn btn-outline btn-sm danger"><i class="fa-solid fa-right-from-bracket"></i> Çıkış</button>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button type="button" class="tab active" data-tab="dashboard"><i class="fa-solid fa-gauge-high"></i> Panel</button>
+    <button type="button" class="tab" data-tab="general"><i class="fa-solid fa-sliders"></i> Genel</button>
+    <button type="button" class="tab" data-tab="products"><i class="fa-solid fa-box"></i> Ürünler</button>
+    <button type="button" class="tab" data-tab="features"><i class="fa-solid fa-star"></i> Özellikler</button>
+    <button type="button" class="tab" data-tab="faq"><i class="fa-solid fa-circle-question"></i> FAQ</button>
+    <button type="button" class="tab" data-tab="banner"><i class="fa-solid fa-bullhorn"></i> Banner</button>
+    <button type="button" class="tab" data-tab="translations"><i class="fa-solid fa-language"></i> Çeviri</button>
+    <button type="button" class="tab" data-tab="messages"><i class="fa-solid fa-envelope"></i> Mesajlar</button>
+    <button type="button" class="tab" data-tab="logs"><i class="fa-solid fa-clock-rotate-left"></i> Log</button>
+  </nav>
+
+  <main class="admin-main">
+
+    <section class="tab-panel active" data-panel="dashboard">
+      <div class="stats">
+        <div class="stat"><strong id="stat-products">0</strong><span>Ürün</span></div>
+        <div class="stat"><strong id="stat-features">0</strong><span>Özellik</span></div>
+        <div class="stat"><strong id="stat-faq">0</strong><span>FAQ</span></div>
+        <div class="stat"><strong id="stat-messages">0</strong><span>Mesaj</span></div>
+      </div>
+      <div class="panel-head"><h3>Son Aktiviteler</h3></div>
+      <div id="recent-logs"></div>
+    </section>
+
+    <section class="tab-panel" data-panel="general">
+      <div class="panel-head"><h3>Genel Ayarlar</h3></div>
+      <div class="admin-row">
+        <div class="row-controls">
+          <div><label class="f-label">Varsayılan Dil</label>
+            <select id="inp-lang"><option value="en">EN</option><option value="tr">TR</option></select>
+          </div>
+          <div><label class="f-label">Yedek E-posta</label><input type="email" id="inp-email" placeholder="info@risebunny.com"></div>
+        </div>
+        <label class="f-label">Logo URL</label>
+        <div class="row-controls">
+          <input type="text" id="inp-logo" placeholder="https://... veya data:">
+          <label class="btn btn-glow btn-sm" style="align-self:start"><i class="fa-solid fa-upload"></i> Logo Yükle<input type="file" id="logo-file" accept="image/*" hidden></label>
+        </div>
+        <label class="f-label">Sosyal Linkler</label>
+        <div class="row-controls">
+          <div class="soc-input"><i class="fa-brands fa-discord"></i><input type="text" id="soc-discord" placeholder="Discord URL"></div>
+          <div class="soc-input"><i class="fa-brands fa-telegram"></i><input type="text" id="soc-telegram" placeholder="Telegram URL"></div>
+          <div class="soc-input"><i class="fa-brands fa-youtube"></i><input type="text" id="soc-youtube" placeholder="YouTube URL"></div>
+          <div class="soc-input"><i class="fa-brands fa-tiktok"></i><input type="text" id="soc-tiktok" placeholder="TikTok URL"></div>
+        </div>
+        <div class="row-actions"><button type="button" id="btn-save-general" class="btn btn-primary btn-sm"><i class="fa-solid fa-floppy-disk"></i> Kaydet</button></div>
+      </div>
+    </section>
+
+    <section class="tab-panel" data-panel="products">
+      <div class="panel-head"><h3>Ürünler</h3><button type="button" id="btn-add-product" class="btn btn-primary btn-sm"><i class="fa-solid fa-plus"></i> Yeni Ürün</button></div>
+      <div id="product-rows"></div>
+    </section>
+
+    <section class="tab-panel" data-panel="features">
+      <div class="panel-head"><h3>Özellikler</h3><button type="button" id="btn-add-feature" class="btn btn-primary btn-sm"><i class="fa-solid fa-plus"></i> Yeni Özellik</button></div>
+      <div id="feature-rows"></div>
+    </section>
+
+    <section class="tab-panel" data-panel="faq">
+      <div class="panel-head"><h3>FAQ</h3><button type="button" id="btn-add-faq" class="btn btn-primary btn-sm"><i class="fa-solid fa-plus"></i> Yeni FAQ</button></div>
+      <div id="faq-rows"></div>
+    </section>
+
+    <section class="tab-panel" data-panel="banner">
+      <div class="panel-head"><h3>Duyuru Bannerı</h3></div>
+      <div class="admin-row">
+        <label class="f-label"><input type="checkbox" id="banner-enabled" style="width:auto;margin-right:8px">Banner aktif</label>
+        <div class="row-controls">
+          <div><label class="f-label">Tip</label>
+            <select id="banner-type"><option value="info">info</option><option value="warning">warning</option><option value="success">success</option></select>
+          </div>
+          <div><label class="f-label">Link (opsiyonel)</label><input type="text" id="banner-link" placeholder="https://..."></div>
+        </div>
+        <div class="row-controls" style="margin-top:8px">
+          <textarea id="banner-en" rows="2" placeholder="Banner text (EN)"></textarea>
+          <textarea id="banner-tr" rows="2" placeholder="Banner text (TR)"></textarea>
+        </div>
+        <div class="row-actions"><button type="button" id="btn-save-banner" class="btn btn-primary btn-sm"><i class="fa-solid fa-floppy-disk"></i> Kaydet</button></div>
+      </div>
+    </section>
+
+    <section class="tab-panel" data-panel="translations">
+      <div class="panel-head"><h3>Çeviriler (EN / TR)</h3><button type="button" id="btn-save-trans" class="btn btn-primary btn-sm"><i class="fa-solid fa-floppy-disk"></i> Kaydet</button></div>
+      <div id="trans-grid"></div>
+    </section>
+
+    <section class="tab-panel" data-panel="messages">
+      <div class="panel-head"><h3>Gelen Mesajlar</h3><button type="button" id="btn-refresh-messages" class="btn btn-outline btn-sm"><i class="fa-solid fa-rotate"></i> Yenile</button></div>
+      <div id="messages-list"></div>
+    </section>
+
+    <section class="tab-panel" data-panel="logs">
+      <div class="panel-head"><h3>Aktivite Logları</h3><button type="button" id="btn-clear-logs" class="btn btn-outline btn-sm danger"><i class="fa-solid fa-trash"></i> Temizle</button></div>
+      <div id="logs-list"></div>
+    </section>
+
+  </main>
+</div>
+
+<div class="modal" id="icon-picker">
+  <div class="modal-box">
+    <button type="button" id="icon-picker-close" class="modal-close"><i class="fa-solid fa-xmark"></i></button>
+    <h3>İkon Seç</h3>
+    <div id="icon-grid" class="icon-grid"></div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>

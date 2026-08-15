@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0a0a0f">
+<meta name="description" content="RiseBunny — innovative gaming clients, projects and community software.">
+<title>RiseBunny | Rise Beyond Limits</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<div id="particles" aria-hidden="true"></div>
+<div id="site-banner" class="site-banner" hidden></div>
+
+<nav class="navbar" id="navbar">
+  <div class="nav-inner">
+    <a href="#hero" class="nav-logo">
+      <img id="logo-img" class="logo-img" alt="" style="display:none">
+      <span class="logo-emoji">🐰</span>
+      <span>RiseBunny</span>
+    </a>
+    <div class="nav-links" id="nav-links">
+      <a href="#hero" data-i18n="nav_home">Home</a>
+      <a href="#products" data-i18n="nav_products">Products</a>
+      <a href="#about" data-i18n="nav_about">About</a>
+      <a href="#faq" data-i18n="nav_faq">FAQ</a>
+      <a href="#contact" data-i18n="nav_contact">Contact</a>
+    </div>
+    <div class="nav-actions">
+      <div class="lang-switcher">
+        <button type="button" class="lang-btn" data-lang="en">EN</button>
+        <button type="button" class="lang-btn" data-lang="tr">TR</button>
+      </div>
+      <button type="button" class="burger" id="burger" aria-label="Menu" aria-expanded="false"><i class="fa-solid fa-bars"></i></button>
+    </div>
+  </div>
+</nav>
+
+<header class="hero" id="hero">
+  <div class="hero-content">
+    <div class="hero-logo">
+      <img id="hero-logo-img" class="logo-img" alt="" style="display:none">
+      <span class="hero-emoji">🐰</span>
+    </div>
+    <span class="hero-badge" data-i18n="hero_badge">RiseBunny Software</span>
+    <h1 data-i18n="hero_title">Rise <span class="gradient-text">Beyond Limits.</span></h1>
+    <p class="hero-sub" data-i18n="hero_sub">Innovative software. Powerful experiences. Built by RiseBunny.</p>
+    <p class="hero-desc" data-i18n="hero_desc">RiseBunny develops innovative gaming clients, game projects and community-focused software.</p>
+    <div class="hero-btns">
+      <a href="#products" class="btn btn-primary"><i class="fa-solid fa-rocket"></i> <span data-i18n="btn_explore">Explore Products</span></a>
+      <a href="#about" class="btn btn-outline"><span data-i18n="btn_learn">Learn More</span></a>
+    </div>
+  </div>
+</header>
+
+<section id="products">
+  <div class="container">
+    <div class="section-header reveal">
+      <h2 data-i18n="prod_title">Our Products</h2>
+      <p data-i18n="prod_sub">Explore the software and projects built by RiseBunny.</p>
+    </div>
+    <div class="products-grid" id="products-grid"></div>
+  </div>
+</section>
+
+<section id="features">
+  <div class="container">
+    <div class="section-header reveal">
+      <h2 data-i18n="feat_title">Why RiseBunny?</h2>
+      <p data-i18n="feat_sub">The values that drive everything we build.</p>
+    </div>
+    <div class="features-grid" id="features-grid"></div>
+  </div>
+</section>
+
+<section id="about">
+  <div class="container">
+    <div class="about-grid">
+      <div class="about-text reveal">
+        <h2 data-i18n="about_title">Built to Rise.</h2>
+        <p data-i18n="about_p1">RiseBunny is a software company focused on creating innovative gaming software, custom clients and community tools.</p>
+        <p data-i18n="about_p2">We bridge the gap between complex technology and great user experience.</p>
+      </div>
+      <div class="about-stats reveal">
+        <div class="stat-card"><strong>3+</strong><span data-i18n="nav_products">Products</span></div>
+        <div class="stat-card"><strong>5</strong><span>Platform</span></div>
+        <div class="stat-card"><strong>EN/TR</strong><span>i18n</span></div>
+        <div class="stat-card"><strong>24/7</strong><span>Dev</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="ecosystem">
+  <div class="container">
+    <div class="section-header reveal">
+      <h2 data-i18n="eco_title">Our Ecosystem</h2>
+      <p data-i18n="eco_sub">The platforms RiseBunny builds for.</p>
+    </div>
+    <div class="platforms reveal">
+      <div class="platform-chip"><i class="fa-solid fa-cube"></i> Minecraft</div>
+      <div class="platform-chip"><i class="fa-solid fa-star"></i> Brawl Stars</div>
+      <div class="platform-chip"><i class="fa-brands fa-discord"></i> Discord</div>
+      <div class="platform-chip"><i class="fa-brands fa-windows"></i> Windows</div>
+      <div class="platform-chip"><i class="fa-solid fa-globe"></i> Web</div>
+    </div>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="container">
+    <div class="section-header reveal">
+      <h2 data-i18n="faq_title">Frequently Asked Questions</h2>
+    </div>
+    <div class="faq-list" id="faq-list"></div>
+  </div>
+</section>
+
+<section id="contact">
+  <div class="container">
+    <div class="section-header reveal">
+      <h2 data-i18n="contact_title">Let's Build Something Great.</h2>
+      <p data-i18n="contact_sub">Have a question, collaboration idea or feedback?</p>
+    </div>
+    <div class="contact-grid">
+      <div class="contact-info reveal">
+        <h3 data-i18n="discord_title">Join Our Community</h3>
+        <p data-i18n="discord_desc">Our Discord invite link will be shared here very soon.</p>
+        <div class="social-links" id="social-links"></div>
+      </div>
+      <form class="contact-form reveal" id="contact-form" novalidate>
+        <div class="form-group">
+          <label for="c-name" data-i18n="lbl_name">Name</label>
+          <input type="text" id="c-name" name="name" required data-i18n-ph="ph_name" placeholder="Your name">
+        </div>
+        <div class="form-group">
+          <label for="c-email" data-i18n="lbl_email">Email</label>
+          <input type="email" id="c-email" name="email" required data-i18n-ph="ph_email" placeholder="you@example.com">
+        </div>
+        <div class="form-group">
+          <label for="c-subject" data-i18n="lbl_subject">Subject</label>
+          <input type="text" id="c-subject" name="subject" required data-i18n-ph="ph_subject" placeholder="Subject">
+        </div>
+        <div class="form-group">
+          <label for="c-message" data-i18n="lbl_message">Message</label>
+          <textarea id="c-message" name="message" required data-i18n-ph="ph_message" placeholder="Your message..."></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary" id="send-btn"><i class="fa-solid fa-paper-plane"></i> <span data-i18n="btn_send">Send Message</span></button>
+        <div class="form-note"><i class="fa-solid fa-lock"></i><span data-i18n="form_note">Your message is transmitted over an encrypted connection.</span></div>
+      </form>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <img id="footer-logo-img" class="logo-img" alt="" style="display:none">
+        <span class="f-emoji">🐰</span>
+        <h4>RiseBunny</h4>
+        <p data-i18n="footer_slogan">Rise Beyond Limits.</p>
+      </div>
+      <div class="footer-col">
+        <h4 data-i18n="footer_nav">Navigation</h4>
+        <a href="#hero" data-i18n="nav_home">Home</a>
+        <a href="#products" data-i18n="nav_products">Products</a>
+        <a href="#about" data-i18n="nav_about">About</a>
+        <a href="#faq" data-i18n="nav_faq">FAQ</a>
+      </div>
+      <div class="footer-col">
+        <h4 data-i18n="footer_legal">Legal</h4>
+        <a href="#" data-i18n="privacy">Privacy Policy</a>
+        <a href="#" data-i18n="terms">Terms of Service</a>
+      </div>
+      <div class="footer-col">
+        <h4 data-i18n="footer_contact">Contact</h4>
+        <a href="#contact" data-i18n="nav_contact">Contact</a>
+      </div>
+    </div>
+    <div class="footer-bottom rb-copyright" data-i18n="copyright">© 2026 RiseBunny. All rights reserved.</div>
+  </div>
+</footer>
+
+<div class="modal" id="modal">
+  <div class="modal-content">
+    <button type="button" class="modal-close" id="modal-close" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+    <img class="m-img" id="m-img" alt="" style="display:none">
+    <h2 class="m-title" id="m-title"></h2>
+    <div class="m-tags" id="m-tags"></div>
+    <p class="m-desc" id="m-desc"></p>
+    <h3 class="m-feat-title" id="m-feat-title">Key Features</h3>
+    <div class="m-features" id="m-features"></div>
+    <div class="modal-actions" id="modal-actions"></div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/rb-data.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
