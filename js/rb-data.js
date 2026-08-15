@@ -51,8 +51,8 @@ window.RB_DATA = (function () {
         id: 'f1', order: 0,
         q: { en: 'What exactly is RiseBunny?', tr: 'RiseBunny tam olarak nedir?' },
         a: {
-          en: 'An indie software crew under RiseBunny Software: one Discord bot, two Minecraft clients, one Brawl Stars project and a growing community.',
-          tr: 'RiseBunny Software çatısında bir indie yazılım ekibi: bir Discord botu, iki Minecraft istemcisi, bir Brawl Stars projesi ve büyüyen bir topluluk.'
+          en: 'RiseBunny is An indie software crew under RiseBunny Software, constantly growing community that involved in many projects.',
+          tr: 'RiseBunny Software çatısında bir indie yazılım ekibidir, Bir Sürü Projede Var Olan Ve Durmadan Büyüyen Bir Topluluktur.'
         }
       },
       {
