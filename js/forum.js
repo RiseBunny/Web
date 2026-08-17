@@ -1,14 +1,14 @@
-/*! RiseBunny Forum v3 — Compat SPA | Admin: footer 5-tık ŞART */
+/*! RiseBunny Forum — Compat SPA | Admin: footer 5-tık ŞART */
 
 const L = {
-  tr:{ login:"Giriş / Kayıt", logout:"Çıkış", ident:"Kullanıcı adı veya yetkili e-postası",
+  tr:{ login:"Giriş / Kayıt", logout:"Çıkış", ident:"Kullanıcı adı",
     pass:"Şifre", enter:"Giriş Yap", cats:"Kategoriler", newThread:"＋ Yeni Konu", title:"Konu başlığı",
     content:"Mesajın...", send:"Gönder", reply:"Yanıt yaz...", replies:"yanıt", views:"görüntülenme",
     locked:"🔒 Yoruma kapalı", pinned:"📌 Sabit", admin:"⚙️ Yetkili Paneli", users:"Kullanıcılar",
     threads:"Konular", ban:"BAN", unban:"BAN Kaldır", del:"Sil", lock:"Kilitle", unlock:"Kilidi Aç",
     pin:"Sabitle", unpin:"Sabitleme", noPerm:"🚫 Bu bölüme erişim yetkin yok.", notFound:"404 — Sayfa Bulunamadı",
     empty:"Henüz konu yok. İlk konuyu sen aç! 🐰", vip:"VIP Forum", back:"← Geri" },
-  en:{ login:"Login / Register", logout:"Logout", ident:"Username or staff e-mail",
+  en:{ login:"Login / Register", logout:"Logout", ident:"Username",
     pass:"Password", enter:"Sign in", cats:"Categories", newThread:"＋ New Thread", title:"Thread title",
     content:"Your message...", send:"Send", reply:"Write a reply...", replies:"replies", views:"views",
     locked:"🔒 Locked", pinned:"📌 Pinned", admin:"⚙️ Staff Panel", users:"Users",
@@ -31,7 +31,7 @@ const CUR = () => RBAuth.CURRENT();
 const myW = () => RBAuth.myWeight();
 const adminUnlocked = () => sessionStorage.getItem("rb_fadmin") === "1";
 
-/* ── HATALARI EKRANA YAZ (spinner yerine teşhis) ── */
+/* ── HATALARI EKRANA YAZ ── */
 function showErr(e) { const v = document.getElementById("view");
   if (v) v.innerHTML = '<div class="rb-empty">⚠️ Hata: ' + (e && e.message ? e.message : e) + '</div>'; }
 window.addEventListener("error", e => showErr(e.message || e.error));
@@ -70,7 +70,7 @@ function route() {
   } catch (e) { showErr(e); }
 }
 
-/* ── Kategoriler (orderBy YOK — istemcide sırala) ── */
+/* ── Kategoriler ── */
 async function renderHome() {
   const snap = await db.collection("categories").get();
   const cats = []; snap.forEach(d => cats.push({ slug: d.id, ...d.data() }));
@@ -101,7 +101,7 @@ async function renderCategory(slug) {
     <a class="rb-back" href="#/">${t("back")}</a>
     <div class="rb-cathead"><span class="rb-icon">${esc(c.icon||"💬")}</span>
       <h2>${esc((c.name&&c.name[lang])||c.slug)}</h2>
-      ${CUR() ? `<a class="rb-btn" href="#/new/${esc(slug)}">${t("newThread")}</a>` : ""}</div>
+      <a class="rb-btn" href="${CUR() ? `#/new/${esc(slug)}` : "#/login"}">${t("newThread")}</a></div>
     ${list.map(th => `<a class="rb-card" href="#/t/${th.id}">
       <div class="rb-info"><h3>${th.pinned?`<em class="rb-pin">${t("pinned")}</em> `:""}${th.locked?`<em class="rb-lock">${t("locked")}</em> `:""}${esc(th.title)}</h3>
         <p>${badge(th.authorRole||"member")} <b>${esc(th.authorName)}</b> · ${fmt(th.createdAt)}</p></div>
@@ -110,7 +110,7 @@ async function renderCategory(slug) {
   </div>`;
 }
 
-/* ── Konu + yanıtlar (orderBy YOK) ── */
+/* ── Konu + yanıtlar ── */
 async function renderThread(id) {
   const td = await db.collection("threads").doc(id).get();
   if (!td.exists) return view().innerHTML = `<div class="rb-empty">${t("notFound")}</div>`;
@@ -154,7 +154,7 @@ async function renderNew(slug) {
     <button class="rb-btn" onclick="RB.newThread('${esc(slug)}')">${t("send")}</button></div></div>`;
 }
 
-/* ── Profil ─ */
+/* ── Profil ── */
 async function renderProfile(username) {
   const s = await db.collection("users").where("username","==",username).get();
   if (s.empty) return view().innerHTML = `<div class="rb-empty">${t("notFound")}</div>`;
@@ -267,8 +267,14 @@ function setupFooterTap() {
     timer = setTimeout(() => taps = 0, 2000);
     if (taps >= 5) {
       taps = 0;
-      sessionStorage.setItem("rb_ftap", "1");
-      location.hash = "#/login";
+      const u = CUR();
+      if (u && myW() >= 3) {
+        sessionStorage.setItem("rb_fadmin", "1");
+        location.hash = "#/admin";
+      } else {
+        sessionStorage.setItem("rb_ftap", "1");
+        location.hash = "#/login";
+      }
     }
   });
 }
