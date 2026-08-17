@@ -1,4 +1,4 @@
-/*! RiseBunny Forum v9 */
+/*! RiseBunny Forum v10 */
 
 const L = {
   tr:{ login:"Giriş / Kayıt", logout:"Çıkış", ident:"Kullanıcı adı", pass:"Şifre", enter:"Giriş Yap",
@@ -7,14 +7,16 @@ const L = {
     admin:"⚙️ Yetkili Paneli", users:"Kullanıcılar", threads:"Konular", ban:"BAN", unban:"BAN Kaldır", del:"Sil",
     lock:"Kilitle", unlock:"Kilidi Aç", pin:"Sabitle", unpin:"Sabitleme", noPerm:"🚫 Bu bölüme erişim yetkin yok.",
     notFound:"404 — Sayfa Bulunamadı", empty:"Henüz konu yok. İlk konuyu sen aç! 🐰", vip:"VIP Forum",
-    back:"← Geri", soon:"Forum çok yakında! 🐰", seed:" Kategorileri Tohumla" },
+    back:"← Geri", soon:"Forum çok yakında! 🐰", seed:"🌱 Varsayılan Kategorileri Tohumla",
+    attach:"📷 Resim", addCat:"＋ Kategori Ekle" },
   en:{ login:"Login / Register", logout:"Logout", ident:"Username", pass:"Password", enter:"Sign in",
     cats:"Categories", newThread:"＋ New Thread", title:"Thread title", content:"Your message...", send:"Send",
     reply:"Write a reply...", replies:"replies", views:"views", locked:"🔒 Locked", pinned:"📌 Pinned",
     admin:"⚙️ Staff Panel", users:"Users", threads:"Threads", ban:"BAN", unban:"Unban", del:"Delete",
     lock:"Lock", unlock:"Unlock", pin:"Pin", unpin:"Unpin", noPerm:"🚫 You lack permission.",
     notFound:"404 — Not Found", empty:"No threads yet. Start the first! 🐰", vip:"VIP Forum",
-    back:"← Back", soon:"Forum coming soon! 🐰", seed:"🌱 Seed Categories" }
+    back:"← Back", soon:"Forum coming soon! 🐰", seed:"🌱 Seed Default Categories",
+    attach:"📷 Image", addCat:"＋ Add Category" }
 };
 let lang = localStorage.getItem("rb-lang") || "tr";
 const t = k => (L[lang] && L[lang][k]) || L.tr[k] || k;
@@ -24,7 +26,7 @@ const esc = s => String(s ?? "").replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt
 const badge = r => { const b = RBAuth.BADGE[r] || RBAuth.BADGE.member;
   return `<span class="rb-badge" data-role="${r}">${b.icon}<i>${esc(b[lang]||b.tr)}</i></span>`; };
 const fmt = ts => ts && ts.seconds ? new Date(ts.seconds*1000)
-  .toLocaleString(lang=="tr"?"tr-TR":"en-GB",{day:"numeric",month:"short",hour:"2d",minute:"2d"}) : "—";
+  .toLocaleString(lang=="tr"?"tr-TR":"en-GB",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}) : "—";
 const secs = ts => (ts && ts.seconds) || 0;
 const view = () => document.getElementById("view");
 const CUR = () => RBAuth.CURRENT();
@@ -35,6 +37,64 @@ function showErr(e) { const v = document.getElementById("view");
   if (v) v.innerHTML = '<div class="rb-empty">⚠️ Hata: ' + (e && e.message ? e.message : e) + '</div>'; }
 window.addEventListener("error", e => showErr(e.message || e.error));
 window.addEventListener("unhandledrejection", e => showErr(e.reason));
+
+function show404() {
+  if (window.__rb404) return window.__rb404();
+  fetch('404.html').then(r => { if (!r.ok) throw 0; return r.text(); }).then(h => { document.open(); document.write(h); document.close(); })
+  .catch(() => { document.body.innerHTML = '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;background:#050507;color:#fff"><h1 style="font-size:5rem;margin:0">404</h1><p style="color:#9ca3af">Page Not Found</p></div>'; });
+}
+
+/* ── Ek CSS (yeni bileşenler) ── */
+(function injectCSS(){
+  const s = document.createElement('style');
+  s.textContent = '.rb-postimg{max-width:100%;border-radius:12px;margin-top:10px;border:1px solid var(--line)}' +
+    '.rb-attach{display:flex;align-items:center;gap:8px}.rb-prev{width:56px;height:56px;object-fit:cover;border-radius:10px;border:1px solid var(--line)}' +
+    '.rb-admtabs{display:flex;gap:8px;margin:14px 0;flex-wrap:wrap}.rb-at{padding:9px 16px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--dim);cursor:pointer;font-weight:700;font-size:13px}.rb-at.active{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;border-color:transparent}' +
+    '.rb-admform{display:flex;flex-direction:column;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;margin-top:16px}' +
+    '.rb-admform input,.rb-admform select{background:#0e1219;border:1px solid var(--line);border-radius:10px;color:var(--txt);padding:10px 12px;outline:none}';
+  document.head.appendChild(s);
+})();
+
+/* ── Görsel sıkıştırma (yetkili eki) ── */
+function compressImage(file, maxDim, q) {
+  return new Promise(function (res, rej) {
+    const rd = new FileReader();
+    rd.onload = function () {
+      const img = new Image();
+      img.onload = function () {
+        const sc = Math.min(1, maxDim / Math.max(img.width, img.height));
+        const c = document.createElement('canvas');
+        c.width = Math.max(1, Math.round(img.width * sc)); c.height = Math.max(1, Math.round(img.height * sc));
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        res(c.toDataURL('image/jpeg', q));
+      };
+      img.onerror = rej; img.src = rd.result;
+    };
+    rd.onerror = rej; rd.readAsDataURL(file);
+  });
+}
+async function pickImage(file) {
+  const st = [[700,0.7],[520,0.6],[420,0.5]];
+  for (let i=0;i<st.length;i++){
+    const d = await compressImage(file, st[i][0], st[i][1]);
+    if (d.length <= 400000 || i === st.length-1) {
+      if (d.length > 450000) throw new Error("Görsel çok büyük");
+      return d;
+    }
+  }
+}
+function bindFile(inputId, prevId) {
+  const f = document.getElementById(inputId);
+  if (!f) return;
+  f.addEventListener("change", async () => {
+    if (!f.files[0]) return;
+    try {
+      window.__rbImg = await pickImage(f.files[0]);
+      const pv = document.getElementById(prevId);
+      if (pv) { pv.src = window.__rbImg; pv.hidden = false; }
+    } catch (e) { showErr(e); }
+  });
+}
 
 /* ── Navbar ── */
 function nav() {
@@ -48,10 +108,12 @@ function nav() {
     : `<a class="rb-loginbtn" href="#/login">🐰 ${t("login")}</a>`;
 }
 
-/* ── Router ─ */
+/* ── Router  */
 function route() {
   try {
     nav();
+    const cu = CUR();
+    if (cu && cu.banned) { RB.logout(); return show404(); }   // 🔒 BANLI = 404
     const h = (location.hash || "#/").split("/");
     const page = h[1] || "", arg = decodeURIComponent(h[2] || "");
     if (page === "")      return renderHome();
@@ -69,7 +131,7 @@ function route() {
   } catch (e) { showErr(e); }
 }
 
-/* ── Kategori tohumu (kurucu, tek sefer) ── */
+/* ── Kategori tohumu ── */
 async function seedCats() {
   const cats = [
     { slug:"duyurular", icon:"📢", order:1, minWeight:0, name:{tr:"Duyurular",en:"Announcements"}, desc:{tr:"Resmi RiseBunny duyuruları",en:"Official RiseBunny news"} },
@@ -100,8 +162,7 @@ async function renderHome() {
       <div class="rb-stats"><div class="rb-stat"><b>${(c.stats&&c.stats.threads)||0}</b><span>${t("threads")}</span></div></div></a>`;
   });
   view().innerHTML = `<div class="forum-wrap"><h2 class="rb-h2">${t("cats")}</h2>
-    ${cards || `<div class="rb-empty">${myW()>=5 ? t("empty") : t("soon")}</div>`}
-    ${myW()>=5 ? `<div style="text-align:center"><button class="rb-ghost" onclick="RB.seed()">${t("seed")}</button></div>` : ""}</div>`;
+    ${cards || `<div class="rb-empty">${myW()>=5 ? t("empty") : t("soon")}</div>`}</div>`;
 }
 
 /* ── Konu listesi ── */
@@ -139,6 +200,7 @@ async function renderThread(id) {
     posts += `<div class="rb-post"><div class="rb-posthead">${badge(p.authorRole||"member")}
       <b>${esc(p.authorName)}</b><span class="rb-time">${fmt(p.createdAt)}${p.edited?" ✏️":""}</span></div>
       <div class="rb-postbody">${esc(p.content).replace(/\n/g,"<br>")}</div>
+      ${p.image ? `<img class="rb-postimg" src="${p.image}" alt="">` : ""}
       ${myW()>=3 ? `<button class="rb-ghost" onclick="RB.delPost('${p.id}')">${t("del")}</button>` : ""}</div>`;
   });
   const canReply = (CUR() && !th.locked) || myW() >= 3;
@@ -151,12 +213,15 @@ async function renderThread(id) {
         <button class="rb-ghost" onclick="RB.lock('${id}',${!th.locked})">${th.locked?t("unlock"):t("lock")}</button>
         <button class="rb-ghost" onclick="RB.pin('${id}',${!th.pinned})">${th.pinned?t("unpin"):t("pin")}</button>
         <button class="rb-ghost rb-danger" onclick="RB.delThread('${id}')">${t("del")}</button></div>` : ""}</div>
-    <div class="rb-post rb-op"><div class="rb-postbody">${esc(th.content).replace(/\n/g,"<br>")}</div></div>
+    <div class="rb-post rb-op"><div class="rb-postbody">${esc(th.content).replace(/\n/g,"<br>")}</div>
+      ${th.image ? `<img class="rb-postimg" src="${th.image}" alt="">` : ""}</div>
     ${posts}
     ${CUR() && canReply ? `<div class="rb-replybox"><textarea id="replyBox" placeholder="${t("reply")}"></textarea>
+      ${myW()>=3 ? `<div class="rb-attach"><label class="rb-ghost">${t("attach")}<input type="file" id="replyFile" accept="image/*" hidden></label><img id="replyPrev" class="rb-prev" hidden></div>` : ""}
       <button class="rb-btn" onclick="RB.reply('${id}','${esc(th.categoryId)}',${th.minWeight||0})">${t("send")}</button></div>`
     : CUR() ? `<div class="rb-empty">${t("locked")}</div>`
     : `<div style="text-align:center"><a class="rb-btn" href="#/login">${t("login")}</a></div>`}</div>`;
+  bindFile("replyFile", "replyPrev");
 }
 
 /* ── Yeni konu ── */
@@ -165,7 +230,9 @@ async function renderNew(slug) {
   view().innerHTML = `<div class="forum-wrap"><a class="rb-back" href="#/c/${esc(slug)}">${t("back")}</a>
     <div class="rb-form"><h2>${t("newThread")}</h2><input id="ntTitle" placeholder="${t("title")}" maxlength="90">
     <textarea id="ntBody" rows="5" placeholder="${t("content")}"></textarea>
+    ${myW()>=3 ? `<div class="rb-attach"><label class="rb-ghost">${t("attach")}<input type="file" id="ntFile" accept="image/*" hidden></label><img id="ntPrev" class="rb-prev" hidden></div>` : ""}
     <button class="rb-btn" onclick="RB.newThread('${esc(slug)}')">${t("send")}</button></div></div>`;
+  bindFile("ntFile", "ntPrev");
 }
 
 /* ── Profil ── */
@@ -196,25 +263,64 @@ function renderLogin() {
   document.getElementById("authPw").addEventListener("keydown", e => { if (e.key==="Enter") RB.doLogin(); });
 }
 
-/* ── Forum Admin ── */
+/* ── Yetkili Paneli (sekmeli) ── */
 async function renderAdmin() {
-  const us = await db.collection("users").get();
-  let rows = ""; us.forEach(d => { const u = d.data();
-    rows += `<div class="rb-row"><b>${esc(u.username)}</b> ${badge(u.role)}
-      <select onchange="RB.setRole('${d.id}',this.value)">${Object.keys(RBAuth.WEIGHT).map(r=>`<option ${r===u.role?"selected":""}>${r}</option>`).join("")}</select>
-      <button class="rb-ghost rb-danger" onclick="RB.ban('${d.id}',${!u.banned})">${u.banned?t("unban"):t("ban")}</button></div>`;
-  });
-  const th = await db.collection("threads").get();
-  let trows = ""; th.forEach(d => { const x = d.data();
-    trows += `<div class="rb-row"><b>${esc(x.title)}</b>
-      <button class="rb-ghost" onclick="RB.lock('${d.id}',${!x.locked})">${x.locked?t("unlock"):t("lock")}</button>
-      <button class="rb-ghost" onclick="RB.pin('${d.id}',${!x.pinned})">${x.pinned?t("unpin"):t("pin")}</button>
-      <button class="rb-ghost rb-danger" onclick="RB.delThread('${d.id}')">${t("del")}</button></div>`;
-  });
   view().innerHTML = `<div class="forum-wrap"><a class="rb-back" href="#/">${t("back")}</a>
     <h2 class="rb-h2">${t("admin")}</h2>
-    <h3>${t("users")}</h3>${rows}<h3>${t("threads")}</h3>${trows||`<div class="rb-empty">—</div>`}
-    ${myW()>=5 ? `<div style="text-align:center;margin-top:16px"><button class="rb-ghost" onclick="RB.seed()">${t("seed")}</button></div>` : ""}</div>`;
+    <div class="rb-admtabs">
+      <button class="rb-at active" data-at="users">${t("users")}</button>
+      <button class="rb-at" data-at="threads">${t("threads")}</button>
+      <button class="rb-at" data-at="cats">${t("cats")}</button>
+    </div>
+    <div id="adm-body"><div class="rb-empty">🐰...</div></div></div>`;
+  document.querySelectorAll(".rb-at").forEach(b => b.addEventListener("click", () => {
+    document.querySelectorAll(".rb-at").forEach(x => x.classList.remove("active"));
+    b.classList.add("active");
+    admSection(b.getAttribute("data-at"));
+  }));
+  admSection("users");
+}
+async function admSection(kind) {
+  const body = document.getElementById("adm-body"); if (!body) return;
+  body.innerHTML = '<div class="rb-empty">🐰...</div>';
+  if (kind === "users") {
+    const us = await db.collection("users").get();
+    let rows = ""; us.forEach(d => { const u = d.data();
+      rows += `<div class="rb-row"><b>${esc(u.username)}${u.banned?' 🚫':''}</b> ${badge(u.role)}
+        <select onchange="RB.setRole('${d.id}',this.value)">${Object.keys(RBAuth.WEIGHT).map(r=>`<option ${r===u.role?"selected":""}>${r}</option>`).join("")}</select>
+        <button class="rb-ghost rb-danger" onclick="RB.ban('${d.id}',${!u.banned})">${u.banned?t("unban"):t("ban")}</button></div>`;
+    });
+    body.innerHTML = rows || '<div class="rb-empty">—</div>';
+  }
+  if (kind === "threads") {
+    const th = await db.collection("threads").get();
+    let rows = ""; th.forEach(d => { const x = d.data();
+      rows += `<div class="rb-row"><b>${esc(x.title)}</b>
+        <button class="rb-ghost" onclick="RB.lock('${d.id}',${!x.locked})">${x.locked?t("unlock"):t("lock")}</button>
+        <button class="rb-ghost" onclick="RB.pin('${d.id}',${!x.pinned})">${x.pinned?t("unpin"):t("pin")}</button>
+        <button class="rb-ghost rb-danger" onclick="RB.delThread('${d.id}')">${t("del")}</button></div>`;
+    });
+    body.innerHTML = rows || '<div class="rb-empty">—</div>';
+  }
+  if (kind === "cats") {
+    const snap = await db.collection("categories").get();
+    let rows = ""; snap.forEach(d => { const c = d.data();
+      rows += `<div class="rb-row"><b>${esc(c.icon||"💬")} ${esc((c.name&&c.name.tr)||d.id)}</b>
+        <span class="rb-badge" data-role="${(c.minWeight||0)>=3?"moderator":(c.minWeight||0)===2?"vip":"member"}">W:${c.minWeight||0}</span>
+        <button class="rb-ghost rb-danger" onclick="RB.delCat('${esc(d.id)}')">${t("del")}</button></div>`;
+    });
+    body.innerHTML = rows + (myW()>=5 ? `<div class="rb-admform">
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <input id="nc-slug" placeholder="slug (orn. valorant)" style="flex:1;min-width:120px">
+        <input id="nc-icon" placeholder="🎮" style="width:70px">
+        <select id="nc-weight"><option value="0">Herkese (0)</option><option value="1">Üye (1)</option><option value="2">VIP (2)</option><option value="3">Staff (3)</option></select>
+      </div>
+      <input id="nc-tr" placeholder="İsim (TR)"><input id="nc-en" placeholder="Name (EN)">
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="rb-btn" onclick="RB.addCat()">${t("addCat")}</button>
+        <button class="rb-ghost" onclick="RB.seed()">${t("seed")}</button>
+      </div></div>` : "");
+  }
 }
 
 /* ══════════ AKSİYONLAR ══════════ */
@@ -234,14 +340,27 @@ RB.doLogin = async () => {
     location.hash = "#/";
   } catch (e) { m.textContent = typeof e === "string" ? e : (e.message || "Hata!"); }
 };
-RB.seed = async () => { await seedCats(); route(); };
+RB.seed = async () => { await seedCats(); admSection("cats"); };
+RB.addCat = async () => {
+  const slug = (document.getElementById("nc-slug").value||"").trim().toLowerCase().replace(/[^a-z0-9-]+/g,"-");
+  if (!slug) return;
+  await db.collection("categories").doc(slug).set({
+    slug, icon: document.getElementById("nc-icon").value || "💬", order: 99,
+    minWeight: parseInt(document.getElementById("nc-weight").value,10) || 0,
+    name: { tr: document.getElementById("nc-tr").value || slug, en: document.getElementById("nc-en").value || slug },
+    desc: { tr: "", en: "" }, stats: { threads: 0, posts: 0 }
+  });
+  admSection("cats");
+};
+RB.delCat = async id => { if (!confirm("?")) return; await db.collection("categories").doc(id).delete(); admSection("cats"); };
 RB.reply = async (tid, cat, mw) => {
   const txt = (document.getElementById("replyBox").value || "").trim();
-  if (!txt) return;
+  if (!txt && !window.__rbImg) return;
   const u = CUR();
   await db.collection("posts").add({ threadId:tid, categoryId:cat, minWeight:mw,
-    content:txt, authorId:u.uid, authorName:u.username, authorRole:u.role,
+    content:txt, image: window.__rbImg || "", authorId:u.uid, authorName:u.username, authorRole:u.role,
     edited:false, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+  window.__rbImg = "";
   await db.collection("threads").doc(tid).update({
     replies: firebase.firestore.FieldValue.increment(1),
     lastPostAt: firebase.firestore.FieldValue.serverTimestamp() });
@@ -256,10 +375,11 @@ RB.newThread = async slug => {
   const cat = cd.exists ? cd.data() : {};
   const u = CUR();
   await db.collection("threads").add({ title, content:body, categoryId:slug,
-    minWeight:(cat&&cat.minWeight)||0, authorId:u.uid, authorName:u.username, authorRole:u.role,
+    image: window.__rbImg || "", minWeight:(cat&&cat.minWeight)||0, authorId:u.uid, authorName:u.username, authorRole:u.role,
     locked:false, pinned:false, views:0, replies:0,
     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     lastPostAt: firebase.firestore.FieldValue.serverTimestamp() });
+  window.__rbImg = "";
   db.collection("users").doc(u.uid).update({ "stats.threads": firebase.firestore.FieldValue.increment(1) }).catch(()=>{});
   db.collection("categories").doc(slug).update({ "stats.threads": firebase.firestore.FieldValue.increment(1) }).catch(()=>{});
   location.hash = "#/c/" + slug;
@@ -275,14 +395,14 @@ RB.setRole = (uid,role) => db.collection("users").doc(uid).update({ role }).then
 RB.ban = (uid,banned) => db.collection("users").doc(uid).update({ banned }).then(route);
 window.RB = RB;
 
-/* ── Footer 5-tık: SADECE yetkiliyse tepki verir, otherwise HİÇBİR ŞEY ── */
+/* ── Footer 5-tık: sadece yetkili ── */
 function setupFooterTap() {
   const f = document.querySelector(".rb-footer");
   if (!f) return;
   let taps = 0, timer = null;
   f.addEventListener("click", () => {
     const u = CUR();
-    if (!u || myW() < 3) return;   // 🔑 yetkisizse footer normal footer'dır
+    if (!u || myW() < 3) return;
     taps++; clearTimeout(timer);
     timer = setTimeout(() => taps = 0, 2000);
     if (taps >= 5) {
