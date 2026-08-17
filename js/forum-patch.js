@@ -1,21 +1,18 @@
-/*! RiseBunny Forum Patch v8 */
+/*! RiseBunny Forum Patch v9 */
 (function () {
 'use strict';
-console.log('[RB] forum-patch v8 ✓');
-
-/* ── Sürüm damgası (doğru dosya mı çalışıyor? footer'da v8 yazar) ── */
+console.log('[RB] forum-patch v9 ✓');
 function stamp() {
   var f = document.querySelector('.rb-footer');
-  if (f && !f.getAttribute('data-v')) { f.setAttribute('data-v', '8'); f.innerHTML += ' · <b style="color:#8b5cf6">v8</b>'; }
+  if (f && !f.getAttribute('data-v')) { f.setAttribute('data-v', '9'); f.innerHTML += ' · <b style="color:#8b5cf6">v9</b>'; }
 }
 setTimeout(stamp, 800);
 
-/* ── Konu aç butonu YOKSA zorla ekle (eski forum.js çalışsa bile) ── */
 var bn = 0;
 function ensureBtn() {
   bn++;
   document.querySelectorAll('.rb-cathead').forEach(function (ch) {
-    if (ch.querySelector('.rb-btn')) return;
+    if (ch.querySelector('.rb-fab') || ch.querySelector('.rb-btn')) return;
     var slug = decodeURIComponent((location.hash.split('/')[2] || ''));
     var u = window.RBAuth && RBAuth.CURRENT();
     var a = document.createElement('a');
@@ -28,7 +25,6 @@ function ensureBtn() {
 }
 ensureBtn();
 
-/* ── Eksik profili otomatik onar ── */
 function heal() {
   if (typeof db === 'undefined' || typeof auth === 'undefined') return setTimeout(heal, 300);
   auth.onAuthStateChanged(async function (u) {
@@ -54,17 +50,16 @@ function heal() {
 }
 heal();
 
-/* ── Hataları sebebiyle göster ── */
 function patchRB() {
   if (!window.RB) return setTimeout(patchRB, 300);
   var origNew = window.RB.newThread, origReply = window.RB.reply;
   window.RB.newThread = async function (slug) {
     try { await origNew(slug); }
-    catch (e) { alert("⚠️ Konu açılamadı:\n" + ((e && e.message) || e) + "\n\nEkran görüntüsünü at."); }
+    catch (e) { alert("⚠️ Konu açılamadı:\n" + ((e && e.message) || e)); }
   };
   window.RB.reply = async function (a, b, c) {
     try { await origReply(a, b, c); }
-    catch (e) { alert("⚠️ Yanıt gönderilemedi:\n" + ((e && e.message) || e) + "\n\nEkran görüntüsünü at."); }
+    catch (e) { alert("⚠️ Yanıt gönderilemedi:\n" + ((e && e.message) || e)); }
   };
 }
 patchRB();
