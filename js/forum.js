@@ -247,14 +247,24 @@ function setupFooterTap() {
   });
 }
 
-/* ── Başlat ── */
+/* ── Başlat (hata yakalamalı) ── */
+window.addEventListener('error', function (e) {
+  var v = document.getElementById('view');
+  if (v) v.innerHTML = '<div class="rb-empty">⚠️ Hata: ' + (e.message || '?') + '</div>';
+});
 function boot() {
-  if (typeof db === "undefined") return setTimeout(boot, 100);
-  if (document.getElementById("view")) {
-    RBAuth.onAuth(() => route());
-    window.addEventListener("hashchange", route);
+  try {
+    if (typeof db === 'undefined' || typeof RBAuth === 'undefined') {
+      boot.n = (boot.n || 0) + 1;
+      if (boot.n > 50) { view().innerHTML = '<div class="rb-empty">⚠️ Firebase yüklenemedi!<br>forum.html\'de 3 SDK script etiketi + firebase-config.js + forum-auth.js sıralaması eksik olabilir.</div>'; return; }
+      return setTimeout(boot, 100);
+    }
+    RBAuth.onAuth(function () { route(); });
+    window.addEventListener('hashchange', route);
+    setupFooterTap();
+    route();
+  } catch (e) {
+    view().innerHTML = '<div class="rb-empty">⚠️ ' + (e && e.message ? e.message : e) + '</div>';
   }
-  setupFooterTap();
 }
-if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
-else boot();
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
