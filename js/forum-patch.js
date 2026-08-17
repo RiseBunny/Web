@@ -1,20 +1,25 @@
-/*! RiseBunny Forum Patch v14 */
+/*! RiseBunny Forum Patch v15 */
 (function () {
 'use strict';
-console.log('[RB] forum-patch v14 ✓');
+console.log('[RB] forum-patch v15 ✓');
 
-const pesc = s => String(s ?? "").replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));
+const pesc = s => String(s ?? "").replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));
 const plang = () => localStorage.getItem("rb-lang") || "tr";
 const pfmt = ts => ts && ts.seconds ? new Date(ts.seconds*1000)
-  .toLocaleString(plang()=="tr"?"tr-TR":"en-GB",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}) : "—";
+  .toLocaleString(plang()=="tr"?"tr-TR":"en-GB",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"}) : "—";
 const psecs = ts => (ts && ts.seconds) || 0;
+const prel = ts => { if (!ts || !ts.seconds) return "—";
+  const d = Math.floor(Date.now()/1000 - ts.seconds);
+  if (d < 60) return "az önce"; if (d < 3600) return Math.floor(d/60)+" dk önce";
+  if (d < 86400) return Math.floor(d/3600)+" sa önce"; return Math.floor(d/86400)+" gün önce"; };
 const pbadge = r => { const b = window.RBAuth.BADGE[r] || window.RBAuth.BADGE.member;
   return `<span class="rb-badge" data-role="${r}">${b.icon}<i>${pesc(b[plang()]||b.tr)}</i></span>`; };
 
-/* ── Sürüm damgası ── */
+/* ── Damga ── */
 function stamp() {
   var f = document.querySelector('.rb-footer');
-  if (f && f.getAttribute('data-v') !== '14') { f.setAttribute('data-v', '14'); f.innerHTML = f.innerHTML.replace(/v\d+<\/b>/, 'v14</b>'); if (!/v14/.test(f.innerHTML)) f.innerHTML += ' · <b style="color:#8b5cf6">v14</b>'; }
+  if (f && f.getAttribute('data-v') !== '15') { f.setAttribute('data-v','15');
+    f.innerHTML = f.innerHTML.replace(/v\d+<\/b>/,'v15</b>'); if (!/v15/.test(f.innerHTML)) f.innerHTML += ' · <b style="color:#8b5cf6">v15</b>'; }
 }
 setTimeout(stamp, 800);
 
@@ -26,11 +31,9 @@ function ensureBtn() {
     if (ch.querySelector('.rb-fab') || ch.querySelector('.rb-btn')) return;
     var slug = decodeURIComponent((location.hash.split('/')[2] || ''));
     var u = window.RBAuth && RBAuth.CURRENT();
-    var a = document.createElement('a');
-    a.className = 'rb-btn';
+    var a = document.createElement('a'); a.className = 'rb-btn';
     a.href = u ? '#/new/' + encodeURIComponent(slug) : '#/login';
-    a.textContent = '＋ Yeni Konu';
-    ch.appendChild(a);
+    a.textContent = '＋ Yeni Konu'; ch.appendChild(a);
   });
   if (bn < 20) setTimeout(ensureBtn, 1200);
 }
@@ -46,15 +49,14 @@ function heal() {
       var s = await ref.get();
       if (!s.exists) {
         var uname = (u.email || ("uye" + u.uid.slice(0, 6))).split("@")[0];
-        try {
-          await ref.set({ username: uname, role: (u.uid === window.ADMIN_UID) ? "kurucu" : "member",
-            avatar: "", banned: false, stats: { threads: 0, posts: 0, likes: 0 },
-            createdAt: firebase.firestore.FieldValue.serverTimestamp(), lastLogin: firebase.firestore.FieldValue.serverTimestamp() });
-        } catch (e1) {
-          await ref.set({ username: uname + Math.floor(Math.random() * 90 + 10), role: "member",
-            avatar: "", banned: false, stats: { threads: 0, posts: 0, likes: 0 },
-            createdAt: firebase.firestore.FieldValue.serverTimestamp(), lastLogin: firebase.firestore.FieldValue.serverTimestamp() });
-        }
+        await ref.set({ username: uname, role: (u.uid === window.ADMIN_UID) ? "kurucu" : "member",
+          avatar: "", banned: false, stats: { threads: 0, posts: 0, likes: 0 },
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(), lastLogin: firebase.firestore.FieldValue.serverTimestamp() })
+          .catch(async function () {
+            await ref.set({ username: uname + Math.floor(Math.random()*90+10), role: "member", avatar: "", banned: false,
+              stats: { threads: 0, posts: 0, likes: 0 },
+              createdAt: firebase.firestore.FieldValue.serverTimestamp(), lastLogin: firebase.firestore.FieldValue.serverTimestamp() });
+          });
         location.reload();
       }
     } catch (e) {}
@@ -62,31 +64,87 @@ function heal() {
 }
 heal();
 
-/* ── Hata görünürlüğü ── */
+/* ── v15: SON GİRİŞ'i her oturumda tazele ── */
+function touchLastLogin() {
+  var u = window.RBAuth && RBAuth.CURRENT(); if (!u) return;
+  var k = 'rb_ll_' + u.uid;
+  if (sessionStorage.getItem(k)) return;
+  sessionStorage.setItem(k, '1');
+  db.collection('users').doc(u.uid).update({ lastLogin: firebase.firestore.FieldValue.serverTimestamp() }).catch(function(){});
+}
+if (window.RBAuth) RBAuth.onAuth(function () { setTimeout(touchLastLogin, 600); });
+
 function patchRB() {
   if (!window.RB) return setTimeout(patchRB, 300);
   var origNew = window.RB.newThread, origReply = window.RB.reply;
-  window.RB.newThread = async function (slug) {
-    try { await origNew(slug); }
-    catch (e) { alert("⚠️ Konu açılamadı:\n" + ((e && e.message) || e)); }
-  };
-  window.RB.reply = async function (a, b, c) {
-    try { await origReply(a, b, c); }
-    catch (e) { alert("⚠️ Yanıt gönderilemedi:\n" + ((e && e.message) || e)); }
-  };
+  window.RB.newThread = async function (slug) { try { await origNew(slug); } catch (e) { alert("⚠️ Konu açılamadı:\n" + ((e && e.message) || e)); } };
+  window.RB.reply = async function (a, b, c) { try { await origReply(a, b, c); } catch (e) { alert("⚠️ Yanıt gönderilemedi:\n" + ((e && e.message) || e)); } };
 
-  /* ═══ v14: KULLANICI DETAYI — bio YOK, gerçek-kutu YOK, ŞİFRE VAR ═══ */
+  /* ── Şifre göster/gizle ── */
   window.RB.togglePw = () => {
     const el = document.getElementById("rb-pw-val"); if (!el) return;
     if (el.dataset.show === "1") { el.textContent = "••••••••"; el.dataset.show = "0"; }
     else { el.textContent = window.__rbPw || "—"; el.dataset.show = "1"; }
   };
+
+  /* ── v15: HESABI SİL (Auth + users + creds + konular + yorumlar) ── */
+  window.RB.delAccount = function (uid, username) {
+    if (window.RBAuth.CURRENT() && window.RBAuth.CURRENT().uid === uid)
+      return alert("⚠️ Kendi hesabını buradan silemezsin.");
+    if (!confirm('"' + username + '" hesabı ve TÜM verileri silinecek. Emin misin?')) return;
+    if (!confirm('SON UYARI: Bu işlem GERİ ALINAMAZ. Devam edilsin mi?')) return;
+    var secAuth = null;
+    try {
+      var secApp = null;
+      for (var i = 0; i < firebase.apps.length; i++) if (firebase.apps[i].name === 'rb-sec') secApp = firebase.apps[i];
+      if (!secApp) secApp = firebase.initializeApp(window.firebaseConfig, 'rb-sec');
+      secAuth = secApp.auth();
+    } catch (e) {}
+    var clean = function () {
+      return Promise.all([
+        db.collection('threads').where('authorId', '==', uid).get(),
+        db.collection('posts').where('authorId', '==', uid).get()
+      ]).then(function (snaps) {
+        var b = db.batch();
+        snaps[0].forEach(function (d) { b.delete(d.ref); });
+        snaps[1].forEach(function (d) { b.delete(d.ref); });
+        b.delete(db.collection('users').doc(uid));
+        b.delete(db.collection('creds').doc(uid));
+        return b.commit();
+      });
+    };
+    db.collection('creds').doc(uid).get().then(function (cs) {
+      var pw = cs.exists ? (cs.data().password || null) : null;
+      if (pw && secAuth)
+        return secAuth.signInWithEmailAndPassword(username + '@risebunny.app', pw)
+          .then(function (r) { return r.user.delete(); }).catch(function () {});
+    }).then(clean).then(function () {
+      alert('✅ Hesap tamamen silindi.');
+      if (typeof admSection === 'function') admSection('users'); else route();
+    }).catch(function (e) { alert('⚠️ Hata: ' + ((e && e.message) || e)); });
+  };
+
+  /* ── v15: KULLANICI LİSTESİ — BAN'ın yanında 🗑 SİL ─ */
+  window.RB.filterUsers = function (q) {
+    q = (q || "").toLowerCase();
+    const box = document.getElementById("adm-users"); if (!box) return;
+    const list = (window.__ADM_USERS || []).filter(u => (u.username || "").toLowerCase().includes(q));
+    box.innerHTML = list.map(u => `<div class="rb-row rb-rowclick" onclick="RB.userDetail('${u.uid}')">
+      <b class="rb-ulink">👁 ${pesc(u.username)}${u.banned ? ' 🚫' : ''}</b> ${pbadge(u.role)}
+      <span style="display:flex;gap:8px;align-items:center;flex-wrap:wrap" onclick="event.stopPropagation()">
+        <select onchange="RB.setRole('${u.uid}',this.value)">${Object.keys(RBAuth.WEIGHT).map(r=>`<option ${r===u.role?"selected":""}>${r}</option>`).join("")}</select>
+        <button class="rb-ghost rb-danger" onclick="RB.ban('${u.uid}',${!u.banned})">${u.banned ? "BAN Kaldır" : "BAN"}</button>
+        <button class="rb-ghost rb-danger" onclick="RB.delAccount('${u.uid}','${pesc(u.username)}')">🗑 Sil</button>
+      </span></div>`).join("") || '<div class="rb-empty">—</div>';
+  };
+
+  /* ── v15: DETAY — doğru saat + BAN yanında SİL ── */
   window.RB.userDetail = async uid => {
     const body = document.getElementById("adm-body"); if (!body) return;
     body.innerHTML = '<div class="rb-empty">🐰...</div>';
     try {
       const ud = await db.collection("users").doc(uid).get();
-      if (!ud.exists) return window.RB.admUsersBack();
+      if (!ud.exists) return typeof admSection === 'function' ? admSection("users") : 0;
       const u = ud.data();
       const th = await db.collection("threads").where("authorId","==",uid).get();
       const threads = []; th.forEach(d => threads.push(d.data()));
@@ -109,12 +167,13 @@ function patchRB() {
             <div class="rb-stat"><b>${(u.stats&&u.stats.threads)||0}</b><span>Konu</span></div>
             <div class="rb-stat"><b>${(u.stats&&u.stats.posts)||0}</b><span>Yanıt</span></div>
           </div>
-          <p style="color:var(--dim);font-size:12px">📅 Kayıt: ${pfmt(u.createdAt)} · Son giriş: ${pfmt(u.lastLogin)}</p>
+          <p style="color:var(--dim);font-size:12px">📅 Kayıt: ${pfmt(u.createdAt)}<br>🕐 Son giriş: ${pfmt(u.lastLogin)} · ${prel(u.lastLogin)}</p>
           <p style="font-size:13px">🔑 Şifre: <b id="rb-pw-val" data-show="0">${pw ? "••••••••" : "— (henüz kayıtlı değil)"}</b>
             ${pw ? ` <button class="rb-ghost" onclick="RB.togglePw()">👁 Göster/Gizle</button>` : ""}</p>
           <div class="rb-modbar">
             <select onchange="RB.setRole('${uid}',this.value)">${Object.keys(RBAuth.WEIGHT).map(r=>`<option ${r===u.role?"selected":""}>${r}</option>`).join("")}</select>
             <button class="rb-ghost rb-danger" onclick="RB.ban('${uid}',${!u.banned})">${u.banned?"BAN Kaldır":"BAN"}</button>
+            <button class="rb-ghost rb-danger" onclick="RB.delAccount('${uid}','${pesc(u.username)}')">🗑 Hesabı Sil</button>
           </div>
           <h3>💬 Konuları (${threads.length})</h3>
           ${threads.slice(0,10).map(x=>`<div class="rb-row"><b>${pesc(x.title)}</b><small>${pfmt(x.createdAt)}</small></div>`).join("")||'<div class="rb-empty">—</div>'}
@@ -124,7 +183,7 @@ function patchRB() {
     } catch (e) { console.error(e); }
   };
 
-  /* ═══ v14: PROFİL — bio kaldırıldı ═══ */
+  /* ── Profil (bio yok) ── */
   window.renderProfile = async username => {
     const s = await db.collection("users").where("username","==",username).get();
     if (s.empty) return document.getElementById("view").innerHTML = '<div class="forum-wrap"><a class="rb-back" href="#/">← Geri</a><div class="rb-empty">404 — Sayfa Bulunamadı</div></div>';
@@ -138,9 +197,27 @@ function patchRB() {
       <div class="rb-stat"><b>${(u.stats&&u.stats.posts)||0}</b><span>Yanıt</span></div></div>
       ${myW2>=3 && uid !== (CURu&&CURu.uid) ? `<div class="rb-modbar" style="justify-content:center">
         <select onchange="RB.setRole('${uid}',this.value)">${Object.keys(RBAuth.WEIGHT).map(r=>`<option ${r===u.role?"selected":""}>${r}</option>`).join("")}</select>
-        <button class="rb-ghost rb-danger" onclick="RB.ban('${uid}',${!u.banned})">${u.banned?"BAN Kaldır":"BAN"}</button></div>` : ""}
+        <button class="rb-ghost rb-danger" onclick="RB.ban('${uid}',${!u.banned})">${u.banned?"BAN Kaldır":"BAN"}</button>
+        <button class="rb-ghost rb-danger" onclick="RB.delAccount('${uid}','${pesc(u.username)}')">🗑 Hesabı Sil</button></div>` : ""}
     </div></div>`;
   };
 }
 patchRB();
+
+/* ── admin kullanıcı listesini patch'in de görebilmesi için ── */
+(function watchUsers(){
+  var orig = null;
+  function hook(){
+    if (!window.RB || !orig) {
+      if (window.RB && !window.RB.__hooked) { window.RB.__hooked = true; }
+    }
+  }
+  hook();
+  /* forum.js ADM_USERS değişkenini global'e kopyala */
+  setInterval(function(){
+    try {
+      if (typeof ADM_USERS !== 'undefined' && window.__ADM_USERS !== ADM_USERS) window.__ADM_USERS = ADM_USERS;
+    } catch(e){}
+  }, 800);
+})();
 })();
