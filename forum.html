@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RiseBunny Forum — Topluluk</title>
+<meta name="description" content="RiseBunny topluluk forumu. Yükselmek için doğduk! 🐰">
+<meta property="og:title" content="RiseBunny Forum">
+<meta property="og:description" content="Topluluk forumu — VIP, Minecraft, Brawl Stars ve daha fazlası.">
+<meta property="og:url" content="https://risebunny.vercel.app/forum.html">
+<link rel="stylesheet" href="css/styles.css">
+<link rel="stylesheet" href="css/forum.css">
+</head>
+<body>
+<nav class="rb-nav">
+  <div class="rb-navin">
+    <a class="rb-logo" href="index.html">🐰 RiseBunny</a>
+    <div class="rb-navright">
+      <button class="rb-ghost" onclick="rbSetLang('tr')">TR</button>
+      <button class="rb-ghost" onclick="rbSetLang('en')">EN</button>
+      <span id="rb-nav-user"></span>
+    </div>
+  </div>
+</nav>
+<main id="view"><div class="rb-empty">🐰...</div></main>
+<style>.rb-nav{position:sticky;top:0;z-index:50;background:rgba(11,14,20,.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--rb-line)}
+.rb-navin{max-width:1000px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;padding:12px 16px}
+.rb-logo{font-weight:800;font-size:18px;color:#fff;text-decoration:none}
+.rb-navright{display:flex;gap:8px;align-items:center}#rb-nav-user{display:flex;gap:8px;align-items:center;flex-wrap:wrap}</style>
+<script type="module" src="js/forum.js"></script>
+</body>
+</html>
