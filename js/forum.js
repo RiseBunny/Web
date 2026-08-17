@@ -1,4 +1,4 @@
-/*! RiseBunny Forum v12 */
+/*! RiseBunny Forum v13 */
 
 const L = {
   tr:{ login:"Giriş / Kayıt", logout:"Çıkış", ident:"Kullanıcı adı", pass:"Şifre", enter:"Giriş Yap",
@@ -39,9 +39,8 @@ const CUR = () => RBAuth.CURRENT();
 const myW = () => RBAuth.myWeight();
 const adminUnlocked = () => sessionStorage.getItem("rb_fadmin") === "1";
 
-/* ── Yetki yardımcıları ── */
 const canView = c => { const u = CUR();
-  if (!u) return c.guest === true || c.slug === "duyurular";   // 🔑 misafir = sadece duyurular
+  if (!u) return c.guest === true || c.slug === "duyurular";
   return (c.minWeight||0) <= myW(); };
 const canPost = c => { const u = CUR(); if (!u) return false;
   return myW() >= (c.postWeight != null ? c.postWeight : (c.minWeight||0)) && (!c.locked || myW() >= 3); };
@@ -49,7 +48,6 @@ const canPost = c => { const u = CUR(); if (!u) return false;
 function showErr(e) { const v = document.getElementById("view");
   if (v) v.innerHTML = '<div class="rb-empty">⚠️ Hata: ' + (e && e.message ? e.message : e) + '</div>'; }
 window.addEventListener("error", e => showErr(e.message || e.error));
-/* v12: başıboş promise hataları sayfayı EZEMEZ, sadece konsola */
 window.addEventListener("unhandledrejection", e => { console.error("[RB]", e.reason); });
 
 function show404() {
@@ -71,7 +69,8 @@ function show404() {
     '.rb-search{width:100%;margin-bottom:12px;background:#0e1219;border:1px solid var(--line);border-radius:12px;color:var(--txt);padding:11px 14px;outline:none}' +
     '.rb-search:focus{border-color:var(--acc)}' +
     '.rb-ulink{cursor:pointer;text-decoration:underline dotted}.rb-ulink:hover{color:var(--acc)}' +
-    '.rb-udetail h3{margin:18px 0 8px;font-size:15px}.rb-udetail small{color:var(--dim)}';
+    '.rb-udetail h3{margin:18px 0 8px;font-size:15px}.rb-udetail small{color:var(--dim)}' +
+    '.rb-rowclick{cursor:pointer}.rb-rowclick:hover{border-color:rgba(139,92,246,.5)}';
   document.head.appendChild(s);
 })();
 
@@ -185,18 +184,23 @@ async function seedCats() {
   });
 }
 
-/* ── Ana sayfa ── */
+/* ── Ana sayfa (v13: CANLI konu sayıları) ── */
 async function renderHome() {
   let snap = await db.collection("categories").get();
   let cats = []; snap.forEach(d => cats.push({ slug: d.id, ...d.data() }));
   if (!cats.length && myW() >= 5) { await seedCats();
     snap = await db.collection("categories").get(); cats = []; snap.forEach(d => cats.push({ slug: d.id, ...d.data() })); }
-  /* v12: eski duyurular belgesini otomatik onar (guest alanı) */
   if (myW() >= 5) {
     const dy = cats.find(c => c.slug === "duyurular");
     if (dy && dy.guest !== true)
       await db.collection("categories").doc("duyurular").update({ guest: true, postWeight: 3 }).catch(()=>{});
   }
+  /* 🔢 v13: sayaç = veritabanından GERÇEK sayım */
+  const counts = {};
+  try {
+    const all = await db.collection("threads").get();
+    all.forEach(d => { const cid = d.data().categoryId; counts[cid] = (counts[cid]||0) + 1; });
+  } catch (e) {}
   cats.sort((a,b) => (a.order||0) - (b.order||0));
   let cards = "";
   cats.forEach(c => {
@@ -206,7 +210,7 @@ async function renderHome() {
       <div class="rb-info"><h3>${esc((c.name&&c.name[lang])||(c.name&&c.name.tr)||c.slug)}
         ${(c.minWeight||0)>=2?"🔒":""}${c.locked?"🔐":""}</h3>
         <p>${esc((c.desc&&c.desc[lang])||(c.desc&&c.desc.tr)||"")}</p></div>
-      <div class="rb-stats"><div class="rb-stat"><b>${(c.stats&&c.stats.threads)||0}</b><span>${t("threads")}</span></div></div></a>`;
+      <div class="rb-stats"><div class="rb-stat"><b>${counts[c.slug]||0}</b><span>${t("threads")}</span></div></div></a>`;
   });
   view().innerHTML = `<div class="forum-wrap"><h2 class="rb-h2">${t("cats")}</h2>
     ${cards || `<div class="rb-empty">${t("soon")}</div>`}</div>`;
@@ -235,7 +239,7 @@ async function renderCategory(slug) {
     ${canPost(c) ? `<a class="rb-fab" href="#/new/${esc(slug)}" title="${t("newThread")}">＋</a>` : ""}</div>`;
 }
 
-/* ── Konu + yanıtlar ── */
+/* ── Konu + yanıtlar (v13: görüntülenme = hesap başına 1) ── */
 async function renderThread(id) {
   const td = await db.collection("threads").doc(id).get();
   if (!td.exists) return view().innerHTML = `<div class="forum-wrap"><a class="rb-back" href="#/">${t("back")}</a><div class="rb-empty">${t("notFound")}</div></div>`;
@@ -243,7 +247,17 @@ async function renderThread(id) {
   const cd = await db.collection("categories").doc(th.categoryId).get();
   const c = cd.exists ? cd.data() : {};
   if (!canView(c)) return view().innerHTML = `<div class="forum-wrap"><a class="rb-back" href="#/">${t("back")}</a><div class="rb-empty">${CUR()?t("noPerm"):t("guestOnly")}</div></div>`;
-  db.collection("threads").doc(id).update({ views: firebase.firestore.FieldValue.increment(1) }).catch(()=>{});
+  /* 👀 v13: tekil görüntülenme */
+  const u0 = CUR();
+  let countIt = false;
+  if (u0) countIt = !(th.viewedBy || []).includes(u0.uid);
+  else countIt = sessionStorage.getItem("rb_seen_" + id) !== "1";
+  if (countIt) {
+    const up = { views: firebase.firestore.FieldValue.increment(1) };
+    if (u0) up.viewedBy = firebase.firestore.FieldValue.arrayUnion(u0.uid);
+    db.collection("threads").doc(id).update(up).catch(()=>{});
+    if (!u0) sessionStorage.setItem("rb_seen_" + id, "1");
+  }
   const ps = await db.collection("posts").where("threadId","==",id).get();
   const arr = []; ps.forEach(d => arr.push({ id: d.id, ...d.data() }));
   arr.sort((a,b) => secs(a.createdAt) - secs(b.createdAt));
@@ -286,7 +300,7 @@ async function renderNew(slug) {
   bindFile("ntFile", "ntPrev", "ntImgX");
 }
 
-/* ── Bildirimler (v12: asla patlamaz) ── */
+/* ── Bildirimler ── */
 async function renderNotif() {
   const u = CUR(); if (!u) return renderLogin();
   let list = [];
@@ -397,51 +411,57 @@ const RB = {};
 RB.clearImg = (prevId, xId) => { window.__rbImg = "";
   const p = document.getElementById(prevId); if (p) p.hidden = true;
   const x = document.getElementById(xId); if (x) x.hidden = true; };
+/* v13: SATIRIN TAMAMI tıklanabilir + kontroller korunaklı */
 RB.filterUsers = q => {
   q = (q||"").toLowerCase();
   const box = document.getElementById("adm-users"); if (!box) return;
   const list = ADM_USERS.filter(u => (u.username||"").toLowerCase().includes(q));
-  box.innerHTML = list.map(u => `<div class="rb-row">
-    <b class="rb-ulink" onclick="RB.userDetail('${u.uid}')" title="Detay">${esc(u.username)}${u.banned?' 🚫':''}</b> ${badge(u.role)}
-    <select onchange="RB.setRole('${u.uid}',this.value)">${Object.keys(RBAuth.WEIGHT).map(r=>`<option ${r===u.role?"selected":""}>${r}</option>`).join("")}</select>
-    <button class="rb-ghost rb-danger" onclick="RB.ban('${u.uid}',${!u.banned})">${u.banned?t("unban"):t("ban")}</button></div>`).join("") || '<div class="rb-empty">—</div>';
+  box.innerHTML = list.map(u => `<div class="rb-row rb-rowclick" onclick="RB.userDetail('${u.uid}')">
+    <b class="rb-ulink">👁 ${esc(u.username)}${u.banned?' 🚫':''}</b> ${badge(u.role)}
+    <span style="display:flex;gap:8px;align-items:center" onclick="event.stopPropagation()">
+      <select onchange="RB.setRole('${u.uid}',this.value)">${Object.keys(RBAuth.WEIGHT).map(r=>`<option ${r===u.role?"selected":""}>${r}</option>`).join("")}</select>
+      <button class="rb-ghost rb-danger" onclick="RB.ban('${u.uid}',${!u.banned})">${u.banned?t("unban"):t("ban")}</button>
+    </span></div>`).join("") || '<div class="rb-empty">—</div>';
 };
-/* ── v12: KULLANICI DETAYI — tüm veriler ── */
 RB.userDetail = async uid => {
   const body = document.getElementById("adm-body"); if (!body) return;
   body.innerHTML = '<div class="rb-empty">🐰...</div>';
-  const ud = await db.collection("users").doc(uid).get();
-  if (!ud.exists) return RB.filterUsers("");
-  const u = ud.data();
-  const th = await db.collection("threads").where("authorId","==",uid).get();
-  const threads = []; th.forEach(d => threads.push(d.data()));
-  threads.sort((a,b) => secs(b.createdAt) - secs(a.createdAt));
-  const po = await db.collection("posts").where("authorId","==",uid).get();
-  const posts = []; po.forEach(d => posts.push(d.data()));
-  posts.sort((a,b) => secs(b.createdAt) - secs(a.createdAt));
-  body.innerHTML = `<div class="rb-udetail">
-    <button class="rb-back" onclick="RB.admUsersBack()">← ${t("users")}</button>
-    <div class="rb-profile" style="text-align:left">
-      <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
-        <div class="rb-avatar" style="margin:0">${esc((u.username||"?")[0].toUpperCase())}</div>
-        <div><h2 style="margin:0">${esc(u.username)} ${badge(u.role)}</h2>
-        <small>UID: ${esc(uid)}${u.banned?" · 🚫 BANLI":""}</small></div>
-      </div>
-      <div class="rb-stats" style="justify-content:flex-start;margin:14px 0">
-        <div class="rb-stat"><b>${(u.stats&&u.stats.threads)||0}</b><span>${t("threads")}</span></div>
-        <div class="rb-stat"><b>${(u.stats&&u.stats.posts)||0}</b><span>${t("replies")}</span></div>
-      </div>
-      <p style="color:var(--dim);font-size:12px">📅 Kayıt: ${fmt(u.createdAt)} · Son giriş: ${fmt(u.lastLogin)}<br>📖 Bio: ${esc(u.bio||"—")}<br>🖼 Avatar: ${esc(u.avatar||"—")}</p>
-      <p style="color:var(--warn);font-size:12px">🔐 Şifre: sistemde DÜZ METİN olarak tutulmaz (güvenlik gereği hash'lenir), bu yüzden gösterilemez.</p>
-      <div class="rb-modbar">
-        <select onchange="RB.setRole('${uid}',this.value)">${Object.keys(RBAuth.WEIGHT).map(r=>`<option ${r===u.role?"selected":""}>${r}</option>`).join("")}</select>
-        <button class="rb-ghost rb-danger" onclick="RB.ban('${uid}',${!u.banned})">${u.banned?t("unban"):t("ban")}</button>
-      </div>
-      <h3>💬 Konuları (${threads.length})</h3>
-      ${threads.slice(0,10).map(x=>`<div class="rb-row"><b>${esc(x.title)}</b><small>${fmt(x.createdAt)}</small></div>`).join("")||'<div class="rb-empty">—</div>'}
-      <h3>📝 Son Yorumları (${posts.length})</h3>
-      ${posts.slice(0,10).map(x=>`<div class="rb-row"><b style="font-weight:500">${esc((x.content||"").slice(0,90))}</b><small>${fmt(x.createdAt)}</small></div>`).join("")||'<div class="rb-empty">—</div>'}
-    </div></div>`;
+  try {
+    const ud = await db.collection("users").doc(uid).get();
+    if (!ud.exists) return admSection("users");
+    const u = ud.data();
+    const th = await db.collection("threads").where("authorId","==",uid).get();
+    const threads = []; th.forEach(d => threads.push(d.data()));
+    threads.sort((a,b) => secs(b.createdAt) - secs(a.createdAt));
+    const po = await db.collection("posts").where("authorId","==",uid).get();
+    const posts = []; po.forEach(d => posts.push(d.data()));
+    posts.sort((a,b) => secs(b.createdAt) - secs(a.createdAt));
+    body.innerHTML = `<div class="rb-udetail">
+      <button class="rb-back" onclick="RB.admUsersBack()">← ${t("users")}</button>
+      <div class="rb-profile" style="text-align:left">
+        <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+          <div class="rb-avatar" style="margin:0">${esc((u.username||"?")[0].toUpperCase())}</div>
+          <div><h2 style="margin:0">${esc(u.username)} ${badge(u.role)}</h2>
+          <small>UID: ${esc(uid)}${u.banned?" · 🚫 BANLI":""}</small></div>
+        </div>
+        <div class="rb-stats" style="justify-content:flex-start;margin:14px 0">
+          <div class="rb-stat"><b>${(u.stats&&u.stats.threads)||0}</b><span>${t("threads")}</span></div>
+          <div class="rb-stat"><b>${(u.stats&&u.stats.posts)||0}</b><span>${t("replies")}</span></div>
+          <div class="rb-stat"><b>${threads.length}</b><span>gerçek konu</span></div>
+          <div class="rb-stat"><b>${posts.length}</b><span>gerçek yorum</span></div>
+        </div>
+        <p style="color:var(--dim);font-size:12px">📅 Kayıt: ${fmt(u.createdAt)} · Son giriş: ${fmt(u.lastLogin)}<br>📖 Bio: ${esc(u.bio||"—")}</p>
+        <p style="color:var(--warn);font-size:12px">🔐 Şifre düz metin olarak TUTULMAZ (güvenlik), gösterilemez.</p>
+        <div class="rb-modbar">
+          <select onchange="RB.setRole('${uid}',this.value)">${Object.keys(RBAuth.WEIGHT).map(r=>`<option ${r===u.role?"selected":""}>${r}</option>`).join("")}</select>
+          <button class="rb-ghost rb-danger" onclick="RB.ban('${uid}',${!u.banned})">${u.banned?t("unban"):t("ban")}</button>
+        </div>
+        <h3>💬 Konuları (${threads.length})</h3>
+        ${threads.slice(0,10).map(x=>`<div class="rb-row"><b>${esc(x.title)}</b><small>${fmt(x.createdAt)}</small></div>`).join("")||'<div class="rb-empty">—</div>'}
+        <h3>📝 Son Yorumları (${posts.length})</h3>
+        ${posts.slice(0,10).map(x=>`<div class="rb-row"><b style="font-weight:500">${esc((x.content||"").slice(0,90))}</b><small>${fmt(x.createdAt)}</small></div>`).join("")||'<div class="rb-empty">—</div>'}
+      </div></div>`;
+  } catch (e) { showErr(e); }
 };
 RB.admUsersBack = () => admSection("users");
 RB.readAll = async () => {
@@ -525,32 +545,21 @@ RB.newThread = async slug => {
   }
   await db.collection("threads").add({ title, content:body, categoryId:slug,
     image: window.__rbImg || "", minWeight:(c.minWeight||0), authorId:u.uid, authorName:u.username, authorRole:u.role,
-    locked:false, pinned:false, views:0, replies:0,
+    locked:false, pinned:false, views:0, viewedBy:[], replies:0,
     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     lastPostAt: firebase.firestore.FieldValue.serverTimestamp() });
   window.__rbImg = "";
   db.collection("users").doc(u.uid).update({ "stats.threads": firebase.firestore.FieldValue.increment(1) }).catch(()=>{});
-  db.collection("categories").doc(slug).update({ "stats.threads": firebase.firestore.FieldValue.increment(1) }).catch(()=>{});
   location.hash = "#/c/" + slug;
 };
 RB.lock = (id,v) => db.collection("threads").doc(id).update({ locked:v }).then(route);
 RB.pin  = (id,v) => db.collection("threads").doc(id).update({ pinned:v }).then(route);
 RB.delThread = async id => {
   if (!confirm("?")) return;
-  const td = await db.collection("threads").doc(id).get();
   const ps = await db.collection("posts").where("threadId","==",id).get();
   const b = db.batch();
   ps.forEach(p => b.delete(p.ref));
   b.delete(db.collection("threads").doc(id));
-  if (td.exists) {
-    const th = td.data();
-    try {
-      b.update(db.collection("categories").doc(th.categoryId), {
-        "stats.threads": firebase.firestore.FieldValue.increment(-1),
-        "stats.posts": firebase.firestore.FieldValue.increment(-(th.replies||0)) });
-      if (th.authorId) b.update(db.collection("users").doc(th.authorId), { "stats.threads": firebase.firestore.FieldValue.increment(-1) });
-    } catch (e) {}
-  }
   await b.commit().catch(async () => {
     ps.forEach(async p => await p.ref.delete());
     await db.collection("threads").doc(id).delete();
@@ -563,11 +572,7 @@ RB.delPost = async id => {
   const p = pd.data();
   const b = db.batch();
   b.delete(pd.ref);
-  try {
-    b.update(db.collection("threads").doc(p.threadId), { replies: firebase.firestore.FieldValue.increment(-1) });
-    if (p.authorId) b.update(db.collection("users").doc(p.authorId), { "stats.posts": firebase.firestore.FieldValue.increment(-1) });
-    if (p.categoryId) b.update(db.collection("categories").doc(p.categoryId), { "stats.posts": firebase.firestore.FieldValue.increment(-1) });
-  } catch (e) {}
+  try { b.update(db.collection("threads").doc(p.threadId), { replies: firebase.firestore.FieldValue.increment(-1) }); } catch (e) {}
   await b.commit().catch(() => pd.ref.delete());
   route();
 };
