@@ -1,4 +1,4 @@
-/*! RiseBunny Firebase Config + Bakım/Banner Motoru (v7) */
+/*! RiseBunny Firebase Config + Bakım/Banner Motoru (v8) */
 window.firebaseConfig = {
   apiKey: "AIzaSyAq5Nafl9aI2TabzGsj5J9ij6lNwyfTguM",
   authDomain: "gen-lang-client-0590499912.firebaseapp.com",
@@ -12,11 +12,11 @@ window.ADMIN_UID = 'oblLBCNGXEYF8plKq8KUr3m6o4f1';
 (function () {
 'use strict';
 if (window.__rbCoreLoaded) return; window.__rbCoreLoaded = true;
-if (/admin\.html(\?|$)/.test(location.pathname)) return;   // admin paneli etkilenmez
+if (/admin\.html(\?|$)/.test(location.pathname)) return;
 try {
+console.log('[RB] çekirdek v8 ✓');
 var ADMIN_UID = window.ADMIN_UID;
 var FORCE = /[?&]mnt=1/.test(location.search);
-console.log('[RB] çekirdek v7 ✓');
 
 var ov = document.createElement('div');
 ov.id = 'rb-maintenance';
@@ -48,8 +48,10 @@ function isAdminish() {
   return false;
 }
 function loadSDK(src) { return new Promise(function (res) { var s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = res; document.head.appendChild(s); }); }
-
-/* 🔑 v7: ASLA erken app başlatma. Sitenin kendi default app'ini bekle. */
+function ownApp() {
+  try { return firebase.apps.length ? firebase.app() : firebase.initializeApp(window.firebaseConfig, 'rb-mnt'); }
+  catch (e) { try { return firebase.app('rb-mnt'); } catch (e2) { return null; } }
+}
 function run(app) {
   try {
     var db = app.firestore(), auth = app.auth();
@@ -73,18 +75,19 @@ function run(app) {
     check(0);
   } catch (e) {}
 }
-function ownApp() {
-  try { return firebase.apps.length ? firebase.app() : firebase.initializeApp(window.firebaseConfig, 'rb-mnt'); }
-  catch (e) { try { return firebase.app('rb-mnt'); } catch (e2) { return null; } }
-}
+/* 🔑 v8 KURALI: Sayfanın kendi app'i (app.js/forum) varsa ASLA app başlatma, sadece bekle.
+   Kendi init'i OLMAYAN sayfalarda (404 vb.) 4 sn sonra kendimiz açarız. */
 function tick(n) {
   n = n || 0;
+  var hasOwn = !!document.querySelector('script[src*="app.js"], script[src*="forum-auth.js"]');
   if (window.firebase && window.firebase.firestore) {
-    if (firebase.apps.length) return run(firebase.app());        // site kendi app'ini açtı → onu kullan
-    if (n >= 40) { var a = ownApp(); if (a) run(a); return; }     // 4 sn bekledik, app yoksa (404 vb.) kendimiz aç
+    if (firebase.apps.length) return run(firebase.app());
+    if (!hasOwn && n >= 40) { var a = ownApp(); if (a) run(a); return; }
+    if (n >= 150) return;
     return setTimeout(function () { tick(n + 1); }, 100);
   }
-  if (n >= 40) {                                                  // SDK hiç yoksa kendimiz yükle
+  if (n >= 40) {
+    if (hasOwn) return setTimeout(function () { tick(n + 1); }, 100);
     return loadSDK('https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js')
       .then(function () { return loadSDK('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js'); })
       .then(function () { return loadSDK('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js'); })
