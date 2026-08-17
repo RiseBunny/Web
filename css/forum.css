@@ -109,3 +109,12 @@ radial-gradient(900px 500px at -10% 30%,rgba(236,72,153,.10),transparent 55%),va
   .rb-card{padding:14px}
   .rb-userchip b{max-width:64px}
 }
+/* ===== v12 ek ===== */
+html,body{height:auto!important}
+body{display:flex;flex-direction:column;min-height:100vh}
+main#view{flex:1 0 auto}
+.rb-footer{margin-top:auto}
+.rb-ulink{cursor:pointer;text-decoration:underline dotted}
+.rb-ulink:hover{color:var(--acc)}
+.rb-udetail h3{margin:18px 0 8px;font-size:15px;color:var(--txt)}
+.rb-udetail small{color:var(--dim)}
