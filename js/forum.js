@@ -1,20 +1,20 @@
-/*! RiseBunny Forum — Compat SPA | Admin: footer 5-tık ŞART */
+/*! RiseBunny Forum v9 */
 
 const L = {
-  tr:{ login:"Giriş / Kayıt", logout:"Çıkış", ident:"Kullanıcı adı",
-    pass:"Şifre", enter:"Giriş Yap", cats:"Kategoriler", newThread:"＋ Yeni Konu", title:"Konu başlığı",
-    content:"Mesajın...", send:"Gönder", reply:"Yanıt yaz...", replies:"yanıt", views:"görüntülenme",
-    locked:"🔒 Yoruma kapalı", pinned:"📌 Sabit", admin:"⚙️ Yetkili Paneli", users:"Kullanıcılar",
-    threads:"Konular", ban:"BAN", unban:"BAN Kaldır", del:"Sil", lock:"Kilitle", unlock:"Kilidi Aç",
-    pin:"Sabitle", unpin:"Sabitleme", noPerm:"🚫 Bu bölüme erişim yetkin yok.", notFound:"404 — Sayfa Bulunamadı",
-    empty:"Henüz konu yok. İlk konuyu sen aç! 🐰", vip:"VIP Forum", back:"← Geri" },
-  en:{ login:"Login / Register", logout:"Logout", ident:"Username",
-    pass:"Password", enter:"Sign in", cats:"Categories", newThread:"＋ New Thread", title:"Thread title",
-    content:"Your message...", send:"Send", reply:"Write a reply...", replies:"replies", views:"views",
-    locked:"🔒 Locked", pinned:"📌 Pinned", admin:"⚙️ Staff Panel", users:"Users",
-    threads:"Threads", ban:"BAN", unban:"Unban", del:"Delete", lock:"Lock", unlock:"Unlock",
-    pin:"Pin", unpin:"Unpin", noPerm:"🚫 You lack permission.", notFound:"404 — Not Found",
-    empty:"No threads yet. Start the first! 🐰", vip:"VIP Forum", back:"← Back" }
+  tr:{ login:"Giriş / Kayıt", logout:"Çıkış", ident:"Kullanıcı adı", pass:"Şifre", enter:"Giriş Yap",
+    cats:"Kategoriler", newThread:"＋ Yeni Konu", title:"Konu başlığı", content:"Mesajın...", send:"Gönder",
+    reply:"Yanıt yaz...", replies:"yanıt", views:"görüntülenme", locked:"🔒 Yoruma kapalı", pinned:"📌 Sabit",
+    admin:"⚙️ Yetkili Paneli", users:"Kullanıcılar", threads:"Konular", ban:"BAN", unban:"BAN Kaldır", del:"Sil",
+    lock:"Kilitle", unlock:"Kilidi Aç", pin:"Sabitle", unpin:"Sabitleme", noPerm:"🚫 Bu bölüme erişim yetkin yok.",
+    notFound:"404 — Sayfa Bulunamadı", empty:"Henüz konu yok. İlk konuyu sen aç! 🐰", vip:"VIP Forum",
+    back:"← Geri", soon:"Forum çok yakında! 🐰", seed:" Kategorileri Tohumla" },
+  en:{ login:"Login / Register", logout:"Logout", ident:"Username", pass:"Password", enter:"Sign in",
+    cats:"Categories", newThread:"＋ New Thread", title:"Thread title", content:"Your message...", send:"Send",
+    reply:"Write a reply...", replies:"replies", views:"views", locked:"🔒 Locked", pinned:"📌 Pinned",
+    admin:"⚙️ Staff Panel", users:"Users", threads:"Threads", ban:"BAN", unban:"Unban", del:"Delete",
+    lock:"Lock", unlock:"Unlock", pin:"Pin", unpin:"Unpin", noPerm:"🚫 You lack permission.",
+    notFound:"404 — Not Found", empty:"No threads yet. Start the first! 🐰", vip:"VIP Forum",
+    back:"← Back", soon:"Forum coming soon! 🐰", seed:"🌱 Seed Categories" }
 };
 let lang = localStorage.getItem("rb-lang") || "tr";
 const t = k => (L[lang] && L[lang][k]) || L.tr[k] || k;
@@ -22,7 +22,7 @@ window.rbSetLang = l => { lang = l; localStorage.setItem("rb-lang", l); route();
 
 const esc = s => String(s ?? "").replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));
 const badge = r => { const b = RBAuth.BADGE[r] || RBAuth.BADGE.member;
-  return `<span class="rb-badge" data-role="${r}">${b.icon} ${esc(b[lang]||b.tr)}</span>`; };
+  return `<span class="rb-badge" data-role="${r}">${b.icon}<i>${esc(b[lang]||b.tr)}</i></span>`; };
 const fmt = ts => ts && ts.seconds ? new Date(ts.seconds*1000)
   .toLocaleString(lang=="tr"?"tr-TR":"en-GB",{day:"numeric",month:"short",hour:"2d",minute:"2d"}) : "—";
 const secs = ts => (ts && ts.seconds) || 0;
@@ -31,7 +31,6 @@ const CUR = () => RBAuth.CURRENT();
 const myW = () => RBAuth.myWeight();
 const adminUnlocked = () => sessionStorage.getItem("rb_fadmin") === "1";
 
-/* ── HATALARI EKRANA YAZ ── */
 function showErr(e) { const v = document.getElementById("view");
   if (v) v.innerHTML = '<div class="rb-empty">⚠️ Hata: ' + (e && e.message ? e.message : e) + '</div>'; }
 window.addEventListener("error", e => showErr(e.message || e.error));
@@ -42,11 +41,11 @@ function nav() {
   const u = CUR();
   const box = document.getElementById("rb-nav-user"); if (!box) return;
   box.innerHTML = u
-    ? `${myW()>=2 ? `<a class="rb-vipbtn" href="#/c/vip">⭐ ${t("vip")}</a>` : ""}
-       <a class="rb-userchip" href="#/u/${esc(u.username)}">${badge(u.role)} ${esc(u.username)}</a>
-       ${myW()>=3 && adminUnlocked() ? `<a class="rb-adminbtn" href="#/admin">${t("admin")}</a>` : ""}
-       <button class="rb-ghost" onclick="RB.logout()">${t("logout")}</button>`
-    : `<a class="rb-userchip" href="#/login">🐰 ${t("login")}</a>`;
+    ? `${myW()>=2 ? `<a class="rb-navvip" href="#/c/vip" title="${t("vip")}">⭐</a>` : ""}
+       <a class="rb-userchip" href="#/u/${esc(u.username)}">${badge(u.role)}<b>${esc(u.username)}</b></a>
+       ${myW()>=3 && adminUnlocked() ? `<a class="rb-navadmin" href="#/admin" title="${t("admin")}">⚙️</a>` : ""}
+       <button class="rb-navexit" onclick="RB.logout()" title="${t("logout")}">⎋</button>`
+    : `<a class="rb-loginbtn" href="#/login">🐰 ${t("login")}</a>`;
 }
 
 /* ── Router ─ */
@@ -70,10 +69,26 @@ function route() {
   } catch (e) { showErr(e); }
 }
 
-/* ── Kategoriler ── */
+/* ── Kategori tohumu (kurucu, tek sefer) ── */
+async function seedCats() {
+  const cats = [
+    { slug:"duyurular", icon:"📢", order:1, minWeight:0, name:{tr:"Duyurular",en:"Announcements"}, desc:{tr:"Resmi RiseBunny duyuruları",en:"Official RiseBunny news"} },
+    { slug:"genel", icon:"🐰", order:2, minWeight:0, name:{tr:"Genel Sohbet",en:"General"}, desc:{tr:"Topluluk alanı",en:"Community space"} },
+    { slug:"minecraft", icon:"⛏️", order:3, minWeight:1, name:{tr:"Minecraft",en:"Minecraft"}, desc:{tr:"Rubidium & client",en:"Rubidium & client"} },
+    { slug:"vip", icon:"⭐", order:4, minWeight:2, name:{tr:"VIP Forum",en:"VIP Lounge"}, desc:{tr:"Sadece VIP+",en:"VIP+ only"} },
+    { slug:"staff", icon:"🛡️", order:5, minWeight:3, name:{tr:"Yetkili Alanı",en:"Staff Area"}, desc:{tr:"Mod+",en:"Mod+ only"} }
+  ];
+  const b = db.batch();
+  cats.forEach(c => b.set(db.collection("categories").doc(c.slug), { ...c, stats:{threads:0,posts:0} }));
+  await b.commit();
+}
+
+/* ── Ana sayfa ── */
 async function renderHome() {
-  const snap = await db.collection("categories").get();
-  const cats = []; snap.forEach(d => cats.push({ slug: d.id, ...d.data() }));
+  let snap = await db.collection("categories").get();
+  let cats = []; snap.forEach(d => cats.push({ slug: d.id, ...d.data() }));
+  if (!cats.length && myW() >= 5) { await seedCats();
+    snap = await db.collection("categories").get(); cats = []; snap.forEach(d => cats.push({ slug: d.id, ...d.data() })); }
   cats.sort((a,b) => (a.order||0) - (b.order||0));
   let cards = "";
   cats.forEach(c => {
@@ -85,14 +100,15 @@ async function renderHome() {
       <div class="rb-stats"><div class="rb-stat"><b>${(c.stats&&c.stats.threads)||0}</b><span>${t("threads")}</span></div></div></a>`;
   });
   view().innerHTML = `<div class="forum-wrap"><h2 class="rb-h2">${t("cats")}</h2>
-    ${cards || `<div class="rb-empty">${t("empty")}</div>`}</div>`;
+    ${cards || `<div class="rb-empty">${myW()>=5 ? t("empty") : t("soon")}</div>`}
+    ${myW()>=5 ? `<div style="text-align:center"><button class="rb-ghost" onclick="RB.seed()">${t("seed")}</button></div>` : ""}</div>`;
 }
 
 /* ── Konu listesi ── */
 async function renderCategory(slug) {
   const cd = await db.collection("categories").doc(slug).get();
   if (!cd.exists || (cd.data().minWeight||0) > myW())
-    return view().innerHTML = `<div class="rb-empty">${t("noPerm")}</div>`;
+    return view().innerHTML = `<div class="forum-wrap"><a class="rb-back" href="#/">${t("back")}</a><div class="rb-empty">${t("noPerm")}</div></div>`;
   const c = cd.data();
   const snap = await db.collection("threads").where("categoryId","==",slug).get();
   const list = []; snap.forEach(d => list.push({ id: d.id, ...d.data() }));
@@ -100,22 +116,21 @@ async function renderCategory(slug) {
   view().innerHTML = `<div class="forum-wrap">
     <a class="rb-back" href="#/">${t("back")}</a>
     <div class="rb-cathead"><span class="rb-icon">${esc(c.icon||"💬")}</span>
-      <h2>${esc((c.name&&c.name[lang])||c.slug)}</h2>
-      <a class="rb-btn" href="${CUR() ? `#/new/${esc(slug)}` : "#/login"}">${t("newThread")}</a></div>
+      <h2>${esc((c.name&&c.name[lang])||c.slug)}</h2></div>
     ${list.map(th => `<a class="rb-card" href="#/t/${th.id}">
       <div class="rb-info"><h3>${th.pinned?`<em class="rb-pin">${t("pinned")}</em> `:""}${th.locked?`<em class="rb-lock">${t("locked")}</em> `:""}${esc(th.title)}</h3>
         <p>${badge(th.authorRole||"member")} <b>${esc(th.authorName)}</b> · ${fmt(th.createdAt)}</p></div>
       <div class="rb-stats"><div class="rb-stat"><b>${th.replies||0}</b><span>${t("replies")}</span></div>
       <div class="rb-stat"><b>${th.views||0}</b><span>${t("views")}</span></div></div></a>`).join("") || `<div class="rb-empty">${t("empty")}</div>`}
-  </div>`;
+    <a class="rb-fab" href="${CUR() ? `#/new/${esc(slug)}` : "#/login"}" title="${t("newThread")}">＋</a></div>`;
 }
 
 /* ── Konu + yanıtlar ── */
 async function renderThread(id) {
   const td = await db.collection("threads").doc(id).get();
-  if (!td.exists) return view().innerHTML = `<div class="rb-empty">${t("notFound")}</div>`;
+  if (!td.exists) return view().innerHTML = `<div class="forum-wrap"><a class="rb-back" href="#/">${t("back")}</a><div class="rb-empty">${t("notFound")}</div></div>`;
   const th = td.data();
-  if ((th.minWeight||0) > myW()) return view().innerHTML = `<div class="rb-empty">${t("noPerm")}</div>`;
+  if ((th.minWeight||0) > myW()) return view().innerHTML = `<div class="forum-wrap"><a class="rb-back" href="#/">${t("back")}</a><div class="rb-empty">${t("noPerm")}</div></div>`;
   db.collection("threads").doc(id).update({ views: firebase.firestore.FieldValue.increment(1) }).catch(()=>{});
   const ps = await db.collection("posts").where("threadId","==",id).get();
   const arr = []; ps.forEach(d => arr.push({ id: d.id, ...d.data() }));
@@ -141,30 +156,30 @@ async function renderThread(id) {
     ${CUR() && canReply ? `<div class="rb-replybox"><textarea id="replyBox" placeholder="${t("reply")}"></textarea>
       <button class="rb-btn" onclick="RB.reply('${id}','${esc(th.categoryId)}',${th.minWeight||0})">${t("send")}</button></div>`
     : CUR() ? `<div class="rb-empty">${t("locked")}</div>`
-    : `<a class="rb-btn" href="#/login">${t("login")}</a>`}
-  </div>`;
+    : `<div style="text-align:center"><a class="rb-btn" href="#/login">${t("login")}</a></div>`}</div>`;
 }
 
 /* ── Yeni konu ── */
 async function renderNew(slug) {
   if (!CUR()) return renderLogin();
   view().innerHTML = `<div class="forum-wrap"><a class="rb-back" href="#/c/${esc(slug)}">${t("back")}</a>
-    <div class="rb-form"><input id="ntTitle" placeholder="${t("title")}" maxlength="90">
-    <textarea id="ntBody" placeholder="${t("content")}"></textarea>
+    <div class="rb-form"><h2>${t("newThread")}</h2><input id="ntTitle" placeholder="${t("title")}" maxlength="90">
+    <textarea id="ntBody" rows="5" placeholder="${t("content")}"></textarea>
     <button class="rb-btn" onclick="RB.newThread('${esc(slug)}')">${t("send")}</button></div></div>`;
 }
 
 /* ── Profil ── */
 async function renderProfile(username) {
   const s = await db.collection("users").where("username","==",username).get();
-  if (s.empty) return view().innerHTML = `<div class="rb-empty">${t("notFound")}</div>`;
+  if (s.empty) return view().innerHTML = `<div class="forum-wrap"><a class="rb-back" href="#/">${t("back")}</a><div class="rb-empty">${t("notFound")}</div></div>`;
   let u = null, uid = ""; s.forEach(d => { u = d.data(); uid = d.id; });
-  view().innerHTML = `<div class="forum-wrap"><div class="rb-profile">
+  view().innerHTML = `<div class="forum-wrap"><a class="rb-back" href="#/">${t("back")}</a>
+    <div class="rb-profile">
     <div class="rb-avatar">${esc((u.username||"?")[0].toUpperCase())}</div>
     <h2>${esc(u.username)} ${badge(u.role)}</h2><p>${esc(u.bio||"")}</p>
     <div class="rb-stats"><div class="rb-stat"><b>${(u.stats&&u.stats.threads)||0}</b><span>${t("threads")}</span></div>
     <div class="rb-stat"><b>${(u.stats&&u.stats.posts)||0}</b><span>${t("replies")}</span></div></div>
-    ${myW()>=3 && uid !== (CUR()&&CUR().uid) ? `<div class="rb-modbar">
+    ${myW()>=3 && uid !== (CUR()&&CUR().uid) ? `<div class="rb-modbar" style="justify-content:center">
       <select onchange="RB.setRole('${uid}',this.value)">${Object.keys(RBAuth.WEIGHT).map(r=>`<option ${r===u.role?"selected":""}>${r}</option>`).join("")}</select>
       <button class="rb-ghost rb-danger" onclick="RB.ban('${uid}',${!u.banned})">${u.banned?t("unban"):t("ban")}</button></div>` : ""}
   </div></div>`;
@@ -172,7 +187,7 @@ async function renderProfile(username) {
 
 /* ── Giriş ── */
 function renderLogin() {
-  view().innerHTML = `<div class="forum-wrap"><div class="rb-form rb-auth">
+  view().innerHTML = `<div class="forum-wrap"><div class="rb-form">
     <h2>🐰 ${t("login")}</h2>
     <input id="authId" placeholder="${t("ident")}" autocomplete="username">
     <input id="authPw" type="password" placeholder="${t("pass")}" autocomplete="current-password">
@@ -196,8 +211,10 @@ async function renderAdmin() {
       <button class="rb-ghost" onclick="RB.pin('${d.id}',${!x.pinned})">${x.pinned?t("unpin"):t("pin")}</button>
       <button class="rb-ghost rb-danger" onclick="RB.delThread('${d.id}')">${t("del")}</button></div>`;
   });
-  view().innerHTML = `<div class="forum-wrap"><h2 class="rb-h2">${t("admin")}</h2>
-    <h3>${t("users")}</h3>${rows}<h3>${t("threads")}</h3>${trows||`<div class="rb-empty">—</div>`}</div>`;
+  view().innerHTML = `<div class="forum-wrap"><a class="rb-back" href="#/">${t("back")}</a>
+    <h2 class="rb-h2">${t("admin")}</h2>
+    <h3>${t("users")}</h3>${rows}<h3>${t("threads")}</h3>${trows||`<div class="rb-empty">—</div>`}
+    ${myW()>=5 ? `<div style="text-align:center;margin-top:16px"><button class="rb-ghost" onclick="RB.seed()">${t("seed")}</button></div>` : ""}</div>`;
 }
 
 /* ══════════ AKSİYONLAR ══════════ */
@@ -217,6 +234,7 @@ RB.doLogin = async () => {
     location.hash = "#/";
   } catch (e) { m.textContent = typeof e === "string" ? e : (e.message || "Hata!"); }
 };
+RB.seed = async () => { await seedCats(); route(); };
 RB.reply = async (tid, cat, mw) => {
   const txt = (document.getElementById("replyBox").value || "").trim();
   if (!txt) return;
@@ -257,34 +275,30 @@ RB.setRole = (uid,role) => db.collection("users").doc(uid).update({ role }).then
 RB.ban = (uid,banned) => db.collection("users").doc(uid).update({ banned }).then(route);
 window.RB = RB;
 
-/* ── Footer 5-tık (tek yol) ── */
+/* ── Footer 5-tık: SADECE yetkiliyse tepki verir, otherwise HİÇBİR ŞEY ── */
 function setupFooterTap() {
   const f = document.querySelector(".rb-footer");
   if (!f) return;
   let taps = 0, timer = null;
   f.addEventListener("click", () => {
+    const u = CUR();
+    if (!u || myW() < 3) return;   // 🔑 yetkisizse footer normal footer'dır
     taps++; clearTimeout(timer);
     timer = setTimeout(() => taps = 0, 2000);
     if (taps >= 5) {
       taps = 0;
-      const u = CUR();
-      if (u && myW() >= 3) {
-        sessionStorage.setItem("rb_fadmin", "1");
-        location.hash = "#/admin";
-      } else {
-        sessionStorage.setItem("rb_ftap", "1");
-        location.hash = "#/login";
-      }
+      sessionStorage.setItem("rb_fadmin", "1");
+      location.hash = "#/admin";
     }
   });
 }
 
-/* ── Başlat (savunmalı) ── */
+/* ── Başlat ── */
 function boot() {
   try {
     if (typeof db === 'undefined' || typeof RBAuth === 'undefined') {
       boot.n = (boot.n || 0) + 1;
-      if (boot.n > 50) { view().innerHTML = '<div class="rb-empty">⚠️ Firebase yüklenemedi!<br>forum.html: SDK script etiketleri + firebase-config.js + forum-auth.js sıralamasını kontrol et.</div>'; return; }
+      if (boot.n > 50) { view().innerHTML = '<div class="rb-empty">⚠️ Firebase yüklenemedi!</div>'; return; }
       return setTimeout(boot, 100);
     }
     RBAuth.onAuth(function () { route(); });
