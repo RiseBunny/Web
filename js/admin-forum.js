@@ -1,4 +1,4 @@
-/*! RiseBunny — Admin Forum Sekmesi v5 */
+/*! RiseBunny — Admin Forum Yönetimi (FINAL) */
 (function () {
 'use strict';
 var tok = sessionStorage.getItem('rb_admin_token');
@@ -27,6 +27,7 @@ waitFB(function () {
   var FU = [], PW = {};
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
 
+  /* ── Forum sekmesini panele ekle ── */
   function inject() {
     var tabs = document.querySelectorAll('.tab');
     if (!tabs.length) return setTimeout(inject, 300);
@@ -126,7 +127,7 @@ waitFB(function () {
     document.body.removeChild(ta);
   }
 
-  /* ── 🔑 ŞİFRE DEĞİŞTİR (v5: tüm e-postaları dener, asla invalid-credential vermez) ── */
+  /* ── 🔑 Şifre değiştir (e-posta zinciri + manuel fallback, asla patlamaz) ── */
   function changePw(uid, username) {
     var np = prompt('"' + username + '" için YENİ şifre (en az 6 karakter):');
     if (!np) return;
@@ -151,7 +152,7 @@ waitFB(function () {
       secAuth.signInWithEmailAndPassword(emails[i], pw).then(function (r) {
         return r.user.updatePassword(np).then(function () { return secAuth.signOut(); }).then(function () {
           return db.collection('creds').doc(uid).set({ password: np, email: emails[i],
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true }).catch(function () {});
         });
       }).then(function () {
         db.collection('activity').add({ action: 'forum_chpw', detail: 'Şifre değişti: ' + username, createdAt: firebase.firestore.FieldValue.serverTimestamp() }).catch(function () {});
@@ -169,7 +170,7 @@ waitFB(function () {
     }
   }
 
-  /* ── 🗑 HESABI SİL ── */
+  /* ── 🗑 HESABI SİL (Auth + users + creds + konular + yorumlar) ── */
   function del(uid, username) {
     if (!confirm('"' + username + '" hesabı ve TÜM verileri silinecek. Emin misin?')) return;
     if (!confirm('SON UYARI: GERİ ALINAMAZ! Devam edilsin mi?')) return;
@@ -182,8 +183,9 @@ waitFB(function () {
         snaps[0].forEach(function (d) { b.delete(d.ref); });
         snaps[1].forEach(function (d) { b.delete(d.ref); });
         b.delete(db.collection('users').doc(uid));
-        b.delete(db.collection('creds').doc(uid));
-        return b.commit();
+        return b.commit().then(function () {
+          return db.collection('creds').doc(uid).delete().catch(function () {});
+        });
       });
     };
     var pw = PW[uid] && PW[uid].password ? PW[uid].password : null;
