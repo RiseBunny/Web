@@ -1,4 +1,4 @@
-/*! RiseBunny Admin Extra — Bakım Modu + Görsel Silme Butonları */
+/*! RiseBunny Admin Extra — Bakım Sekmesi + Görsel Silme + Admin Bypass İşareti */
 (function () {
 'use strict';
 function ready(cb) { if (document.readyState !== 'loading') return cb(); document.addEventListener('DOMContentLoaded', cb); }
@@ -13,7 +13,17 @@ function toast(msg, type) {
 
 ready(function () {
 
-  /* ═══════ 1) BAKIM MODU SEKMESİ (otomatik enjekte) ═══════ */
+  /* 🔑 Admin bypass işaretçisi — bakım modu admin'i yutmasın (tüm sekmeler) */
+  function markLive() {
+    try {
+      var tok = sessionStorage.getItem('rb_admin_token');
+      var tim = parseInt(sessionStorage.getItem('rb_admin_time') || '0', 10);
+      if (tok && (Date.now() - tim < 15 * 60 * 1000)) localStorage.setItem('rb_admin_live', String(Date.now()));
+    } catch (e) {}
+  }
+  markLive(); setInterval(markLive, 60000);
+
+  /* ═══════ BAKIM SEKMESİ ═══════ */
   var tabBtn = document.createElement('button');
   tabBtn.type = 'button'; tabBtn.className = 'tab'; tabBtn.setAttribute('data-tab', 'maintenance');
   tabBtn.innerHTML = '<i class="fa-solid fa-screwdriver-wrench"></i> Bakım';
@@ -24,7 +34,7 @@ ready(function () {
   panel.className = 'tab-panel'; panel.setAttribute('data-panel', 'maintenance');
   panel.innerHTML =
     '<h2>🔧 Bakım Modu</h2>' +
-    '<p style="color:#9ca3af;font-size:13px">Aktifken site ziyaretçilere kapanır. Admin panele giriş yapmış cihaz (token) siteyi normal görmeye devam eder.</p>' +
+    '<p style="color:#9ca3af;font-size:13px">Aktifken TÜM sayfalar (index, forum, 404...) ziyaretçilere kapanır. Admin panele giriş yapmış cihaz siteyi normal görür.</p>' +
     '<label style="display:flex;gap:10px;align-items:center;margin:14px 0"><input type="checkbox" id="mnt-enabled"> <b>Bakım modu AKTİF</b></label>' +
     '<div class="row-controls"><textarea id="mnt-tr" rows="2" placeholder="Bakım mesajı (TR)"></textarea><textarea id="mnt-en" rows="2" placeholder="Maintenance message (EN)"></textarea></div>' +
     '<div class="row-actions" style="margin-top:10px"><button type="button" class="btn btn-primary btn-sm" id="btn-save-mnt"><i class="fa-solid fa-floppy-disk"></i> Kaydet</button></div>';
@@ -38,8 +48,6 @@ ready(function () {
   });
 
   fbReady(function (db) {
-
-    /* ── Bakım yükle / kaydet ── */
     db.collection('config').doc('maintenance').get().then(function (s) {
       if (s.exists) { var d = s.data();
         document.getElementById('mnt-enabled').checked = !!d.active;
@@ -54,12 +62,12 @@ ready(function () {
         message: { tr: document.getElementById('mnt-tr').value, en: document.getElementById('mnt-en').value },
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       }).then(function () {
-        toast('Bakım modu kaydedildi ✅', 'success');
+        markLive(); toast('Bakım modu kaydedildi ✅', 'success');
         db.collection('activity').add({ action: 'update_maintenance', detail: 'Bakım modu güncellendi', createdAt: firebase.firestore.FieldValue.serverTimestamp() }).catch(function () {});
       }).catch(function (e) { toast('Hata: ' + e.message, 'error'); });
     });
 
-    /* ═══════ 2) LOGO SİL BUTONU ═══════ */
+    /* ═══════ LOGO SİL ═══════ */
     var logoInput = document.querySelector('#inp-logo');
     if (logoInput && !document.querySelector('#btn-del-logo')) {
       var lb = document.createElement('button');
@@ -69,7 +77,7 @@ ready(function () {
       lb.addEventListener('click', function () { logoInput.value = ''; toast('Logo kaldırıldı — Kaydet ile onayla', 'info'); });
     }
 
-    /* ═══════ 3) ÜRÜN GÖRSELİ SİL BUTONLARI (dinamik satırlara otomatik) ═══════ */
+    /* ═══════ ÜRÜN GÖRSELİ SİL ═══════ */
     function injectDelButtons() {
       document.querySelectorAll('.p-image').forEach(function (inp) {
         var holder = inp.parentNode; if (!holder || holder.querySelector('.p-del-image')) return;
