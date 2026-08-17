@@ -1,4 +1,4 @@
-/*! RiseBunny Forum v11 */
+/*! RiseBunny Forum v12 */
 
 const L = {
   tr:{ login:"Giriş / Kayıt", logout:"Çıkış", ident:"Kullanıcı adı", pass:"Şifre", enter:"Giriş Yap",
@@ -10,7 +10,8 @@ const L = {
     back:"← Geri", soon:"🐰 Duyurular için giriş yap veya bekle!", seed:"🌱 Varsayılan Kategorileri Tohumla",
     attach:"📷 Resim", addCat:"＋ Kategori Ekle", notif:"Bildirimler", readAll:"✓ Tümünü Okundu Say",
     search:"🔍 Kullanıcı ara...", maxThread:"🚫 Spam koruması: üyeler en fazla 2 konu açabilir.",
-    catLocked:"🔒 Kategori kilitli — sadece yetkililer yazabilir", guestOnly:"🔐 Bu bölüm için giriş yapmalısın." },
+    catLocked:"🔒 Kategori kilitli — sadece yetkililer yazabilir", guestOnly:"🔐 Bu bölüm için giriş yapmalısın.",
+    noNotif:"🔔 Bildirim yok." },
   en:{ login:"Login / Register", logout:"Logout", ident:"Username", pass:"Password", enter:"Sign in",
     cats:"Categories", newThread:"＋ New Thread", title:"Thread title", content:"Your message...", send:"Send",
     reply:"Write a reply...", replies:"replies", views:"views", locked:"🔒 Locked", pinned:"📌 Pinned",
@@ -20,7 +21,8 @@ const L = {
     back:"← Back", soon:"🐰 Sign in to see more!", seed:"🌱 Seed Default Categories",
     attach:"📷 Image", addCat:"＋ Add Category", notif:"Notifications", readAll:"✓ Mark All Read",
     search:"🔍 Search user...", maxThread:"🚫 Anti-spam: members can open max 2 threads.",
-    catLocked:"🔒 Category locked — staff only", guestOnly:"🔐 Sign in to view this section." }
+    catLocked:"🔒 Category locked — staff only", guestOnly:"🔐 Sign in to view this section.",
+    noNotif:"🔔 No notifications." }
 };
 let lang = localStorage.getItem("rb-lang") || "tr";
 const t = k => (L[lang] && L[lang][k]) || L.tr[k] || k;
@@ -38,14 +40,17 @@ const myW = () => RBAuth.myWeight();
 const adminUnlocked = () => sessionStorage.getItem("rb_fadmin") === "1";
 
 /* ── Yetki yardımcıları ── */
-const canView = c => { const u = CUR(); if (!u) return c.guest === true; return (c.minWeight||0) <= myW(); };
+const canView = c => { const u = CUR();
+  if (!u) return c.guest === true || c.slug === "duyurular";   // 🔑 misafir = sadece duyurular
+  return (c.minWeight||0) <= myW(); };
 const canPost = c => { const u = CUR(); if (!u) return false;
   return myW() >= (c.postWeight != null ? c.postWeight : (c.minWeight||0)) && (!c.locked || myW() >= 3); };
 
 function showErr(e) { const v = document.getElementById("view");
   if (v) v.innerHTML = '<div class="rb-empty">⚠️ Hata: ' + (e && e.message ? e.message : e) + '</div>'; }
 window.addEventListener("error", e => showErr(e.message || e.error));
-window.addEventListener("unhandledrejection", e => showErr(e.reason));
+/* v12: başıboş promise hataları sayfayı EZEMEZ, sadece konsola */
+window.addEventListener("unhandledrejection", e => { console.error("[RB]", e.reason); });
 
 function show404() {
   if (window.__rb404) return window.__rb404();
@@ -64,7 +69,9 @@ function show404() {
     '.rb-notif:hover{border-color:var(--acc)}.rb-notif.unread{border-color:rgba(139,92,246,.5);background:linear-gradient(135deg,rgba(139,92,246,.08),transparent)}' +
     '.rb-notif .ni{font-size:20px}.rb-notif p{margin:0;font-size:13.5px}.rb-notif small{color:var(--dim)}' +
     '.rb-search{width:100%;margin-bottom:12px;background:#0e1219;border:1px solid var(--line);border-radius:12px;color:var(--txt);padding:11px 14px;outline:none}' +
-    '.rb-search:focus{border-color:var(--acc)}';
+    '.rb-search:focus{border-color:var(--acc)}' +
+    '.rb-ulink{cursor:pointer;text-decoration:underline dotted}.rb-ulink:hover{color:var(--acc)}' +
+    '.rb-udetail h3{margin:18px 0 8px;font-size:15px}.rb-udetail small{color:var(--dim)}';
   document.head.appendChild(s);
 })();
 
@@ -105,7 +112,7 @@ function bindFile(inputId, prevId, xId) {
       window.__rbImg = await pickImage(f.files[0]);
       const pv = document.getElementById(prevId); if (pv) { pv.src = window.__rbImg; pv.hidden = false; }
       const x = document.getElementById(xId); if (x) x.hidden = false;
-    } catch (e) { showErr(e); }
+    } catch (e) { console.error(e); }
   });
 }
 
@@ -137,7 +144,7 @@ function nav() {
   bellCount();
 }
 
-/* ── Router  */
+/* ── Router ── */
 function route() {
   try {
     nav();
@@ -161,7 +168,7 @@ function route() {
   } catch (e) { showErr(e); }
 }
 
-/* ── Tohum (genel & staff SİLİNDİ) ── */
+/* ── Tohum ── */
 async function seedCats() {
   const cats = [
     { slug:"duyurular", icon:"📢", order:1, minWeight:0, postWeight:3, guest:true, name:{tr:"Duyurular",en:"Announcements"}, desc:{tr:"Resmi RiseBunny duyuruları — sadece yetkililer yazar",en:"Official news — staff only writes"} },
@@ -172,7 +179,7 @@ async function seedCats() {
   cats.forEach(c => b.set(db.collection("categories").doc(c.slug), { ...c, stats:{threads:0,posts:0} }));
   ["genel","staff"].forEach(s => b.delete(db.collection("categories").doc(s)));
   await b.commit().catch(async () => {
-    for (const c of cats) await db.collection("categories").doc(c.slug).set({ ...c, stats:{threads:0,posts:0} });
+    for (const c of cats) await db.collection("categories").doc(c.slug).set({ ...c, stats:{threads:0,posts:0} }).catch(()=>{});
     await db.collection("categories").doc("genel").delete().catch(()=>{});
     await db.collection("categories").doc("staff").delete().catch(()=>{});
   });
@@ -184,6 +191,12 @@ async function renderHome() {
   let cats = []; snap.forEach(d => cats.push({ slug: d.id, ...d.data() }));
   if (!cats.length && myW() >= 5) { await seedCats();
     snap = await db.collection("categories").get(); cats = []; snap.forEach(d => cats.push({ slug: d.id, ...d.data() })); }
+  /* v12: eski duyurular belgesini otomatik onar (guest alanı) */
+  if (myW() >= 5) {
+    const dy = cats.find(c => c.slug === "duyurular");
+    if (dy && dy.guest !== true)
+      await db.collection("categories").doc("duyurular").update({ guest: true, postWeight: 3 }).catch(()=>{});
+  }
   cats.sort((a,b) => (a.order||0) - (b.order||0));
   let cards = "";
   cats.forEach(c => {
@@ -199,7 +212,7 @@ async function renderHome() {
     ${cards || `<div class="rb-empty">${t("soon")}</div>`}</div>`;
 }
 
-/* ── Konu listesi ─ */
+/* ── Konu listesi ── */
 async function renderCategory(slug) {
   const cd = await db.collection("categories").doc(slug).get();
   if (!cd.exists || !canView(cd.data()))
@@ -273,11 +286,14 @@ async function renderNew(slug) {
   bindFile("ntFile", "ntPrev", "ntImgX");
 }
 
-/* ── Bildirimler ── */
+/* ── Bildirimler (v12: asla patlamaz) ── */
 async function renderNotif() {
   const u = CUR(); if (!u) return renderLogin();
-  const snap = await db.collection("notifications").where("userId","==",u.uid).get();
-  const list = []; snap.forEach(d => list.push({ id: d.id, ...d.data() }));
+  let list = [];
+  try {
+    const snap = await db.collection("notifications").where("userId","==",u.uid).get();
+    snap.forEach(d => list.push({ id: d.id, ...d.data() }));
+  } catch (e) { console.error(e); }
   list.sort((a,b) => secs(b.createdAt) - secs(a.createdAt));
   const icons = { reply:"💬", role:"🎖️", system:"🐰" };
   view().innerHTML = `<div class="forum-wrap"><a class="rb-back" href="#/">${t("back")}</a>
@@ -285,7 +301,7 @@ async function renderNotif() {
     <div style="text-align:right;margin-bottom:10px"><button class="rb-ghost" onclick="RB.readAll()">${t("readAll")}</button></div>
     ${list.map(n => `<div class="rb-notif ${n.read?"":"unread"}" onclick="RB.openNotif('${n.id}','${esc(n.threadId||"")}')">
       <span class="ni">${icons[n.type]||"🐰"}</span>
-      <div><p>${esc(n.text)}</p><small>${esc(n.from||"")} · ${fmt(n.createdAt)}</small></div></div>`).join("") || `<div class="rb-empty">🔔 —</div>`}</div>`;
+      <div><p>${esc(n.text)}</p><small>${esc(n.from||"")} · ${fmt(n.createdAt)}</small></div></div>`).join("") || `<div class="rb-empty">${t("noNotif")}</div>`}</div>`;
 }
 
 /* ── Profil ── */
@@ -316,7 +332,7 @@ function renderLogin() {
   document.getElementById("authPw").addEventListener("keydown", e => { if (e.key==="Enter") RB.doLogin(); });
 }
 
-/* ── Yetkili Paneli (modern, sekmeli, aramalı) ── */
+/* ── Yetkili Paneli ── */
 let ADM_USERS = [];
 async function renderAdmin() {
   view().innerHTML = `<div class="forum-wrap"><a class="rb-back" href="#/">${t("back")}</a>
@@ -385,15 +401,57 @@ RB.filterUsers = q => {
   q = (q||"").toLowerCase();
   const box = document.getElementById("adm-users"); if (!box) return;
   const list = ADM_USERS.filter(u => (u.username||"").toLowerCase().includes(q));
-  box.innerHTML = list.map(u => `<div class="rb-row"><b>${esc(u.username)}${u.banned?' 🚫':''}</b> ${badge(u.role)}
+  box.innerHTML = list.map(u => `<div class="rb-row">
+    <b class="rb-ulink" onclick="RB.userDetail('${u.uid}')" title="Detay">${esc(u.username)}${u.banned?' 🚫':''}</b> ${badge(u.role)}
     <select onchange="RB.setRole('${u.uid}',this.value)">${Object.keys(RBAuth.WEIGHT).map(r=>`<option ${r===u.role?"selected":""}>${r}</option>`).join("")}</select>
     <button class="rb-ghost rb-danger" onclick="RB.ban('${u.uid}',${!u.banned})">${u.banned?t("unban"):t("ban")}</button></div>`).join("") || '<div class="rb-empty">—</div>';
 };
+/* ── v12: KULLANICI DETAYI — tüm veriler ── */
+RB.userDetail = async uid => {
+  const body = document.getElementById("adm-body"); if (!body) return;
+  body.innerHTML = '<div class="rb-empty">🐰...</div>';
+  const ud = await db.collection("users").doc(uid).get();
+  if (!ud.exists) return RB.filterUsers("");
+  const u = ud.data();
+  const th = await db.collection("threads").where("authorId","==",uid).get();
+  const threads = []; th.forEach(d => threads.push(d.data()));
+  threads.sort((a,b) => secs(b.createdAt) - secs(a.createdAt));
+  const po = await db.collection("posts").where("authorId","==",uid).get();
+  const posts = []; po.forEach(d => posts.push(d.data()));
+  posts.sort((a,b) => secs(b.createdAt) - secs(a.createdAt));
+  body.innerHTML = `<div class="rb-udetail">
+    <button class="rb-back" onclick="RB.admUsersBack()">← ${t("users")}</button>
+    <div class="rb-profile" style="text-align:left">
+      <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+        <div class="rb-avatar" style="margin:0">${esc((u.username||"?")[0].toUpperCase())}</div>
+        <div><h2 style="margin:0">${esc(u.username)} ${badge(u.role)}</h2>
+        <small>UID: ${esc(uid)}${u.banned?" · 🚫 BANLI":""}</small></div>
+      </div>
+      <div class="rb-stats" style="justify-content:flex-start;margin:14px 0">
+        <div class="rb-stat"><b>${(u.stats&&u.stats.threads)||0}</b><span>${t("threads")}</span></div>
+        <div class="rb-stat"><b>${(u.stats&&u.stats.posts)||0}</b><span>${t("replies")}</span></div>
+      </div>
+      <p style="color:var(--dim);font-size:12px">📅 Kayıt: ${fmt(u.createdAt)} · Son giriş: ${fmt(u.lastLogin)}<br>📖 Bio: ${esc(u.bio||"—")}<br>🖼 Avatar: ${esc(u.avatar||"—")}</p>
+      <p style="color:var(--warn);font-size:12px">🔐 Şifre: sistemde DÜZ METİN olarak tutulmaz (güvenlik gereği hash'lenir), bu yüzden gösterilemez.</p>
+      <div class="rb-modbar">
+        <select onchange="RB.setRole('${uid}',this.value)">${Object.keys(RBAuth.WEIGHT).map(r=>`<option ${r===u.role?"selected":""}>${r}</option>`).join("")}</select>
+        <button class="rb-ghost rb-danger" onclick="RB.ban('${uid}',${!u.banned})">${u.banned?t("unban"):t("ban")}</button>
+      </div>
+      <h3>💬 Konuları (${threads.length})</h3>
+      ${threads.slice(0,10).map(x=>`<div class="rb-row"><b>${esc(x.title)}</b><small>${fmt(x.createdAt)}</small></div>`).join("")||'<div class="rb-empty">—</div>'}
+      <h3>📝 Son Yorumları (${posts.length})</h3>
+      ${posts.slice(0,10).map(x=>`<div class="rb-row"><b style="font-weight:500">${esc((x.content||"").slice(0,90))}</b><small>${fmt(x.createdAt)}</small></div>`).join("")||'<div class="rb-empty">—</div>'}
+    </div></div>`;
+};
+RB.admUsersBack = () => admSection("users");
 RB.readAll = async () => {
   const u = CUR(); if (!u) return;
-  const snap = await db.collection("notifications").where("userId","==",u.uid).where("read","==",false).get();
-  const b = db.batch(); snap.forEach(d => b.update(d.ref, { read: true }));
-  await b.commit().catch(()=>{}); route();
+  try {
+    const snap = await db.collection("notifications").where("userId","==",u.uid).where("read","==",false).get();
+    const b = db.batch(); snap.forEach(d => b.update(d.ref, { read: true }));
+    await b.commit();
+  } catch (e) { console.error(e); }
+  route();
 };
 RB.openNotif = async (id, threadId) => {
   await db.collection("notifications").doc(id).update({ read: true }).catch(()=>{});
