@@ -54,62 +54,6 @@
   <p style="color:#4b5563;font-size:12px;margin-top:24px">© 2026 RiseBunny — Tüm hakları saklıdır.</p>
   <style>@keyframes rbPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}</style>
 </div>
-<script>
-(function () {
-  /* ── 1) Admin bypass: geçerli panel token'ı varsa bakım GÖSTERME ── */
-  var tok = sessionStorage.getItem('rb_admin_token');
-  var tim = parseInt(sessionStorage.getItem('rb_admin_time') || '0', 10);
-  if (tok && (Date.now() - tim < 15 * 60 * 1000)) return;
-
-  /* ── 2) Bakım modu kontrolü (Firebase yüklenene kadar bekle) ── */
-  (function waitFB(n) {
-    if (window.firebase && window.firebaseConfig) {
-      try {
-        if (!firebase.apps.length) firebase.initializeApp(window.firebaseConfig);
-        firebase.firestore().collection('config').doc('maintenance').get().then(function (s) {
-          if (s.exists && s.data().active) {
-            var lang = localStorage.getItem('rb-lang') || 'en';
-            var m = s.data().message || {};
-            document.getElementById('rb-mnt-msg').textContent = m[lang] || m.en || m.tr || 'Site geçici olarak bakımda. / Site is under maintenance.';
-            document.getElementById('rb-maintenance').style.display = 'flex';
-            document.body.style.overflow = 'hidden';
-          }
-        }).catch(function () {});
-      } catch (e) {}
-    } else if (n < 50) setTimeout(function () { waitFB(n + 1); }, 100);
-  })(0);
-
-  /* ── 3) Banner X fix: çarpı ile kapanır, oturum boyunca kapalı kalır ── */
-  function bannerFix() {
-    var hidden = sessionStorage.getItem('rb_banner_hidden_text');
-    document.querySelectorAll('[id*="banner" i], [class*="banner" i]').forEach(function (el) {
-      if (el.id === 'rb-maintenance' || el.closest('#rb-maintenance')) return;
-      var txt = (el.textContent || '').trim().slice(0, 120);
-      if (!txt || txt.length < 3) return;
-      if (hidden && hidden === txt) { el.style.display = 'none'; return; }
-      if (hidden && hidden !== txt) sessionStorage.removeItem('rb_banner_hidden_text');
-      var btn = el.querySelector('[class*="close" i], [aria-label*="close" i], .fa-xmark, .fa-times, button');
-      if (!btn) {
-        btn = document.createElement('button');
-        btn.innerHTML = '✕';
-        btn.setAttribute('style', 'position:absolute;top:8px;right:10px;background:rgba(255,255,255,.15);border:none;color:#fff;width:30px;height:30px;border-radius:8px;cursor:pointer;font-size:14px;z-index:10');
-        el.style.position = 'relative';
-        el.appendChild(btn);
-      }
-      if (!btn.__rbBound) {
-        btn.__rbBound = true;
-        btn.addEventListener('click', function (ev) {
-          ev.preventDefault(); ev.stopPropagation();
-          el.style.display = 'none';
-          sessionStorage.setItem('rb_banner_hidden_text', txt);
-        });
-      }
-    });
-  }
-  new MutationObserver(bannerFix).observe(document.body, { childList: true, subtree: true });
-  setTimeout(bannerFix, 800); setTimeout(bannerFix, 2500);
-})();
-</script>
 
 <div id="particles" aria-hidden="true"></div>
 <div id="site-banner" class="site-banner" hidden></div>
