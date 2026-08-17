@@ -6,24 +6,19 @@
 <title>RiseBunny Forum — Topluluk</title>
 <meta name="description" content="RiseBunny topluluk forumu. Yükselmek için doğduk! 🐰">
 <link rel="stylesheet" href="css/styles.css">
-<link rel="stylesheet" href="css/forum.css?v=8">
-<style>
-.rb-nav{position:sticky;top:0;z-index:50;background:rgba(11,14,20,.85);backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,.08)}
-.rb-navin{max-width:1000px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;padding:12px 16px}
-.rb-logo{font-weight:800;font-size:18px;color:#fff;text-decoration:none}
-.rb-navright{display:flex;gap:8px;align-items:center}
-#rb-nav-user{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.rb-footer{margin-top:60px;padding:24px;text-align:center;color:#8b93a7;font-size:13px;border-top:1px solid rgba(255,255,255,.08);user-select:none}
-</style>
+<link rel="stylesheet" href="css/forum.css?v=9">
 </head>
 <body>
 
 <nav class="rb-nav">
   <div class="rb-navin">
-    <a class="rb-logo" href="index.html">🐰 RiseBunny</a>
+    <a class="rb-logo" href="index.html">🐰<b>RiseBunny</b></a>
+    <a class="rb-navhome" href="#/">💬<span>Forum</span></a>
     <div class="rb-navright">
-      <button class="rb-ghost" onclick="rbSetLang('tr')">TR</button>
-      <button class="rb-ghost" onclick="rbSetLang('en')">EN</button>
+      <div class="rb-lang">
+        <button type="button" onclick="rbSetLang('tr')">TR</button>
+        <button type="button" onclick="rbSetLang('en')">EN</button>
+      </div>
       <span id="rb-nav-user"></span>
     </div>
   </div>
@@ -46,8 +41,8 @@
     try { var fa = firebase.initializeApp(window.firebaseConfig, 'forum'); window.db = fa.firestore(); window.auth = fa.auth(); } catch (e2) {}
   }
 </script>
-<script src="js/forum-auth.js?v=8"></script>
-<script src="js/forum.js?v=8"></script>
-<script src="js/forum-patch.js?v=8"></script>
+<script src="js/forum-auth.js?v=9"></script>
+<script src="js/forum.js?v=9"></script>
+<script src="js/forum-patch.js?v=9"></script>
 </body>
 </html>
