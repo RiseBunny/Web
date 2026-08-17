@@ -1,0 +1,54 @@
+/* ===== RiseBunny Forum — Dark Neon ===== */
+:root{--rb-bg:#0b0e14;--rb-card:#151a24;--rb-line:rgba(255,255,255,.08);
+--rb-txt:#e8ecf4;--rb-dim:#8b93a7;--rb-acc:#8b5cf6;--rb-acc2:#ec4899}
+.forum-wrap{max-width:1000px;margin:0 auto;padding:24px 16px;color:var(--rb-txt)}
+.rb-h2{font-size:26px;margin:8px 0 20px;background:linear-gradient(90deg,var(--rb-acc),var(--rb-acc2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.rb-back{color:var(--rb-dim);text-decoration:none;font-size:14px}
+/* Navbar parçaları */
+.rb-vipbtn{padding:6px 14px;border-radius:999px;background:linear-gradient(135deg,#ffd43b,#e8590c);color:#111;font-weight:700;text-decoration:none;font-size:13px;box-shadow:0 0 14px rgba(255,212,59,.4)}
+.rb-adminbtn{padding:6px 12px;border-radius:999px;background:rgba(255,95,109,.15);border:1px solid rgba(255,95,109,.4);color:#ff8791;text-decoration:none;font-size:13px}
+.rb-userchip{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:999px;background:rgba(139,92,246,.12);border:1px solid rgba(139,92,246,.35);color:var(--rb-txt);text-decoration:none;font-weight:600}
+.rb-ghost{background:none;border:1px solid var(--rb-line);color:var(--rb-dim);border-radius:10px;padding:6px 12px;cursor:pointer;transition:.2s}
+.rb-ghost:hover{color:#fff;border-color:var(--rb-acc)}
+.rb-danger{color:#ff8791!important;border-color:rgba(255,95,109,.4)!important}
+/* Rozetler */
+.rb-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;font:600 11px/1.5 system-ui;letter-spacing:.4px;text-transform:uppercase}
+.rb-badge[data-role="kurucu"]{background:linear-gradient(135deg,#ff5f6d,#a1122d);color:#fff;box-shadow:0 0 12px rgba(255,95,109,.45)}
+.rb-badge[data-role="developer"]{background:linear-gradient(135deg,#4dabf7,#1864ab);color:#fff}
+.rb-badge[data-role="moderator"]{background:linear-gradient(135deg,#51cf66,#2b8a3e);color:#fff}
+.rb-badge[data-role="vip"]{background:linear-gradient(135deg,#ffd43b,#e8590c);color:#111}
+.rb-badge[data-role="member"]{background:rgba(255,255,255,.07);color:var(--rb-dim)}
+/* Kartlar */
+.rb-card{display:flex;align-items:center;gap:18px;padding:20px;margin-bottom:14px;background:var(--rb-card);border:1px solid var(--rb-line);border-radius:16px;text-decoration:none;color:var(--rb-txt);transition:.25s cubic-bezier(.4,0,.2,1);animation:rbIn .4s both}
+.rb-card:hover{transform:translateY(-4px);border-color:rgba(139,92,246,.45);box-shadow:0 12px 32px rgba(0,0,0,.5)}
+@keyframes rbIn{from{opacity:0;transform:translateY(12px)}to{opacity:1}}
+.rb-icon{width:60px;height:60px;flex:none;display:grid;place-items:center;font-size:28px;border-radius:14px;background:linear-gradient(135deg,rgba(139,92,246,.18),rgba(236,72,153,.18));border:1px solid rgba(139,92,246,.3)}
+.rb-info{flex:1;min-width:0}.rb-info h3{margin:0 0 6px;font-size:17px}.rb-info p{margin:0;color:var(--rb-dim);font-size:13px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.rb-stats{display:flex;gap:18px}.rb-stat{text-align:center}.rb-stat b{display:block;font-size:19px;color:var(--rb-acc)}.rb-stat span{font-size:10px;color:var(--rb-dim);text-transform:uppercase}
+.rb-pin{color:#ffd43b;font-style:normal;font-size:12px}.rb-lock{color:#ff8791;font-style:normal;font-size:12px}
+.rb-cathead{display:flex;align-items:center;gap:14px;margin:10px 0 20px}.rb-cathead h2{flex:1;margin:0}
+/* Form & buton */
+.rb-btn{padding:10px 22px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--rb-acc),var(--rb-acc2));color:#fff;font-weight:700;cursor:pointer;transition:.2s;text-decoration:none;display:inline-block}
+.rb-btn:hover{filter:brightness(1.15);transform:translateY(-2px)}
+.rb-form{max-width:420px;margin:40px auto;display:flex;flex-direction:column;gap:12px;background:var(--rb-card);padding:28px;border-radius:20px;border:1px solid var(--rb-line)}
+.rb-form input,.rb-form textarea,.rb-replybox textarea{background:#0e1219;border:1px solid var(--rb-line);border-radius:12px;color:var(--rb-txt);padding:12px 14px;font:15px system-ui;outline:none;resize:vertical}
+.rb-form input:focus,.rb-replybox textarea:focus{border-color:var(--rb-acc)}
+.rb-msg{color:#ff8791;font-size:13px;min-height:18px}
+/* Mesajlar */
+.rb-threadhead{margin:14px 0}.rb-threadhead h2{margin:0 0 8px}
+.rb-post{background:var(--rb-card);border:1px solid var(--rb-line);border-radius:14px;padding:16px;margin:12px 0;animation:rbIn .35s both}
+.rb-posthead{display:flex;gap:8px;align-items:center;margin-bottom:8px}.rb-time{margin-left:auto;color:var(--rb-dim);font-size:12px}
+.rb-postbody{line-height:1.6;word-wrap:break-word}
+.rb-op{border-color:rgba(139,92,246,.4)}
+.rb-replybox{display:flex;flex-direction:column;gap:10px;margin-top:18px}
+.rb-replybox .rb-btn{align-self:flex-end}
+.rb-modbar{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.rb-modbar select{background:#0e1219;color:var(--rb-txt);border:1px solid var(--rb-line);border-radius:8px;padding:6px}
+/* Profil & admin satırları */
+.rb-profile{text-align:center;padding:40px 20px;background:var(--rb-card);border-radius:20px;border:1px solid var(--rb-line)}
+.rb-avatar{width:84px;height:84px;margin:0 auto 14px;display:grid;place-items:center;font-size:36px;font-weight:800;border-radius:50%;background:linear-gradient(135deg,var(--rb-acc),var(--rb-acc2));color:#fff}
+.rb-profile .rb-stats{justify-content:center;margin:16px 0}
+.rb-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--rb-card);border:1px solid var(--rb-line);border-radius:12px;padding:12px 14px;margin-bottom:10px}
+.rb-row b{flex:1;min-width:120px}
+.rb-empty{text-align:center;color:var(--rb-dim);padding:50px 0;font-size:15px}
+@media(max-width:640px){.rb-stats{display:none}.rb-card{padding:16px}}
