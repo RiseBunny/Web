@@ -1,4 +1,4 @@
-/*! RiseBunny Forum v10 */
+/*! RiseBunny Forum v11 */
 
 const L = {
   tr:{ login:"Giriş / Kayıt", logout:"Çıkış", ident:"Kullanıcı adı", pass:"Şifre", enter:"Giriş Yap",
@@ -7,16 +7,20 @@ const L = {
     admin:"⚙️ Yetkili Paneli", users:"Kullanıcılar", threads:"Konular", ban:"BAN", unban:"BAN Kaldır", del:"Sil",
     lock:"Kilitle", unlock:"Kilidi Aç", pin:"Sabitle", unpin:"Sabitleme", noPerm:"🚫 Bu bölüme erişim yetkin yok.",
     notFound:"404 — Sayfa Bulunamadı", empty:"Henüz konu yok. İlk konuyu sen aç! 🐰", vip:"VIP Forum",
-    back:"← Geri", soon:"Forum çok yakında! 🐰", seed:"🌱 Varsayılan Kategorileri Tohumla",
-    attach:"📷 Resim", addCat:"＋ Kategori Ekle" },
+    back:"← Geri", soon:"🐰 Duyurular için giriş yap veya bekle!", seed:"🌱 Varsayılan Kategorileri Tohumla",
+    attach:"📷 Resim", addCat:"＋ Kategori Ekle", notif:"Bildirimler", readAll:"✓ Tümünü Okundu Say",
+    search:"🔍 Kullanıcı ara...", maxThread:"🚫 Spam koruması: üyeler en fazla 2 konu açabilir.",
+    catLocked:"🔒 Kategori kilitli — sadece yetkililer yazabilir", guestOnly:"🔐 Bu bölüm için giriş yapmalısın." },
   en:{ login:"Login / Register", logout:"Logout", ident:"Username", pass:"Password", enter:"Sign in",
     cats:"Categories", newThread:"＋ New Thread", title:"Thread title", content:"Your message...", send:"Send",
     reply:"Write a reply...", replies:"replies", views:"views", locked:"🔒 Locked", pinned:"📌 Pinned",
     admin:"⚙️ Staff Panel", users:"Users", threads:"Threads", ban:"BAN", unban:"Unban", del:"Delete",
     lock:"Lock", unlock:"Unlock", pin:"Pin", unpin:"Unpin", noPerm:"🚫 You lack permission.",
     notFound:"404 — Not Found", empty:"No threads yet. Start the first! 🐰", vip:"VIP Forum",
-    back:"← Back", soon:"Forum coming soon! 🐰", seed:"🌱 Seed Default Categories",
-    attach:"📷 Image", addCat:"＋ Add Category" }
+    back:"← Back", soon:"🐰 Sign in to see more!", seed:"🌱 Seed Default Categories",
+    attach:"📷 Image", addCat:"＋ Add Category", notif:"Notifications", readAll:"✓ Mark All Read",
+    search:"🔍 Search user...", maxThread:"🚫 Anti-spam: members can open max 2 threads.",
+    catLocked:"🔒 Category locked — staff only", guestOnly:"🔐 Sign in to view this section." }
 };
 let lang = localStorage.getItem("rb-lang") || "tr";
 const t = k => (L[lang] && L[lang][k]) || L.tr[k] || k;
@@ -33,6 +37,11 @@ const CUR = () => RBAuth.CURRENT();
 const myW = () => RBAuth.myWeight();
 const adminUnlocked = () => sessionStorage.getItem("rb_fadmin") === "1";
 
+/* ── Yetki yardımcıları ── */
+const canView = c => { const u = CUR(); if (!u) return c.guest === true; return (c.minWeight||0) <= myW(); };
+const canPost = c => { const u = CUR(); if (!u) return false;
+  return myW() >= (c.postWeight != null ? c.postWeight : (c.minWeight||0)) && (!c.locked || myW() >= 3); };
+
 function showErr(e) { const v = document.getElementById("view");
   if (v) v.innerHTML = '<div class="rb-empty">⚠️ Hata: ' + (e && e.message ? e.message : e) + '</div>'; }
 window.addEventListener("error", e => showErr(e.message || e.error));
@@ -44,18 +53,22 @@ function show404() {
   .catch(() => { document.body.innerHTML = '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;background:#050507;color:#fff"><h1 style="font-size:5rem;margin:0">404</h1><p style="color:#9ca3af">Page Not Found</p></div>'; });
 }
 
-/* ── Ek CSS (yeni bileşenler) ── */
+/* ── Ek CSS ── */
 (function injectCSS(){
   const s = document.createElement('style');
   s.textContent = '.rb-postimg{max-width:100%;border-radius:12px;margin-top:10px;border:1px solid var(--line)}' +
-    '.rb-attach{display:flex;align-items:center;gap:8px}.rb-prev{width:56px;height:56px;object-fit:cover;border-radius:10px;border:1px solid var(--line)}' +
-    '.rb-admtabs{display:flex;gap:8px;margin:14px 0;flex-wrap:wrap}.rb-at{padding:9px 16px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--dim);cursor:pointer;font-weight:700;font-size:13px}.rb-at.active{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;border-color:transparent}' +
-    '.rb-admform{display:flex;flex-direction:column;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;margin-top:16px}' +
-    '.rb-admform input,.rb-admform select{background:#0e1219;border:1px solid var(--line);border-radius:10px;color:var(--txt);padding:10px 12px;outline:none}';
+    '.rb-attach{display:flex;align-items:center;gap:8px}.rb-prev{width:52px;height:52px;object-fit:cover;border-radius:10px;border:1px solid var(--line)}' +
+    '.rb-bell{position:relative;flex:none;width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:var(--card);cursor:pointer;font-size:16px}' +
+    '.rb-belln{position:absolute;top:-4px;right:-4px;min-width:17px;height:17px;padding:0 4px;border-radius:999px;background:var(--err);color:#fff;font:800 10px/17px system-ui;font-style:normal;text-align:center}' +
+    '.rb-notif{display:flex;gap:12px;align-items:flex-start;padding:14px;margin-bottom:10px;background:var(--card);border:1px solid var(--line);border-radius:14px;cursor:pointer;transition:.2s}' +
+    '.rb-notif:hover{border-color:var(--acc)}.rb-notif.unread{border-color:rgba(139,92,246,.5);background:linear-gradient(135deg,rgba(139,92,246,.08),transparent)}' +
+    '.rb-notif .ni{font-size:20px}.rb-notif p{margin:0;font-size:13.5px}.rb-notif small{color:var(--dim)}' +
+    '.rb-search{width:100%;margin-bottom:12px;background:#0e1219;border:1px solid var(--line);border-radius:12px;color:var(--txt);padding:11px 14px;outline:none}' +
+    '.rb-search:focus{border-color:var(--acc)}';
   document.head.appendChild(s);
 })();
 
-/* ── Görsel sıkıştırma (yetkili eki) ── */
+/* ── Görsel sıkıştırma ── */
 function compressImage(file, maxDim, q) {
   return new Promise(function (res, rej) {
     const rd = new FileReader();
@@ -83,17 +96,31 @@ async function pickImage(file) {
     }
   }
 }
-function bindFile(inputId, prevId) {
+function bindFile(inputId, prevId, xId) {
   const f = document.getElementById(inputId);
   if (!f) return;
   f.addEventListener("change", async () => {
     if (!f.files[0]) return;
     try {
       window.__rbImg = await pickImage(f.files[0]);
-      const pv = document.getElementById(prevId);
-      if (pv) { pv.src = window.__rbImg; pv.hidden = false; }
+      const pv = document.getElementById(prevId); if (pv) { pv.src = window.__rbImg; pv.hidden = false; }
+      const x = document.getElementById(xId); if (x) x.hidden = false;
     } catch (e) { showErr(e); }
   });
+}
+
+/* ── Bildirim ── */
+function notifyUser(userId, type, text, threadId) {
+  if (!userId) return Promise.resolve();
+  return db.collection("notifications").add({ userId, type, text, threadId: threadId || "",
+    from: CUR() ? CUR().username : "system", read: false,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp() }).catch(()=>{});
+}
+function bellCount() {
+  const u = CUR(); if (!u) return;
+  db.collection("notifications").where("userId","==",u.uid).where("read","==",false).get()
+    .then(s => { const el = document.getElementById("rb-bell-n");
+      if (el) { el.hidden = s.size === 0; el.textContent = s.size > 9 ? "9+" : s.size; } }).catch(()=>{});
 }
 
 /* ── Navbar ── */
@@ -102,10 +129,12 @@ function nav() {
   const box = document.getElementById("rb-nav-user"); if (!box) return;
   box.innerHTML = u
     ? `${myW()>=2 ? `<a class="rb-navvip" href="#/c/vip" title="${t("vip")}">⭐</a>` : ""}
+       <button class="rb-bell" onclick="location.hash='#/notif'" title="${t("notif")}">🔔<i id="rb-bell-n" class="rb-belln" hidden></i></button>
        <a class="rb-userchip" href="#/u/${esc(u.username)}">${badge(u.role)}<b>${esc(u.username)}</b></a>
        ${myW()>=3 && adminUnlocked() ? `<a class="rb-navadmin" href="#/admin" title="${t("admin")}">⚙️</a>` : ""}
        <button class="rb-navexit" onclick="RB.logout()" title="${t("logout")}">⎋</button>`
     : `<a class="rb-loginbtn" href="#/login">🐰 ${t("login")}</a>`;
+  bellCount();
 }
 
 /* ── Router  */
@@ -113,15 +142,16 @@ function route() {
   try {
     nav();
     const cu = CUR();
-    if (cu && cu.banned) { RB.logout(); return show404(); }   // 🔒 BANLI = 404
+    if (cu && cu.banned) { RB.logout(); return show404(); }
     const h = (location.hash || "#/").split("/");
     const page = h[1] || "", arg = decodeURIComponent(h[2] || "");
-    if (page === "")      return renderHome();
-    if (page === "c")     return renderCategory(arg);
-    if (page === "t")     return renderThread(arg);
-    if (page === "u")     return renderProfile(arg);
-    if (page === "new")   return renderNew(arg);
-    if (page === "login") return renderLogin();
+    if (page === "")        return renderHome();
+    if (page === "c")       return renderCategory(arg);
+    if (page === "t")       return renderThread(arg);
+    if (page === "u")       return renderProfile(arg);
+    if (page === "new")     return renderNew(arg);
+    if (page === "login")   return renderLogin();
+    if (page === "notif")   return renderNotif();
     if (page === "admin") {
       if (!adminUnlocked() || myW() < 3)
         return view().innerHTML = `<div class="rb-empty">${t("notFound")}</div>`;
@@ -131,18 +161,21 @@ function route() {
   } catch (e) { showErr(e); }
 }
 
-/* ── Kategori tohumu ── */
+/* ── Tohum (genel & staff SİLİNDİ) ── */
 async function seedCats() {
   const cats = [
-    { slug:"duyurular", icon:"📢", order:1, minWeight:0, name:{tr:"Duyurular",en:"Announcements"}, desc:{tr:"Resmi RiseBunny duyuruları",en:"Official RiseBunny news"} },
-    { slug:"genel", icon:"🐰", order:2, minWeight:0, name:{tr:"Genel Sohbet",en:"General"}, desc:{tr:"Topluluk alanı",en:"Community space"} },
-    { slug:"minecraft", icon:"⛏️", order:3, minWeight:1, name:{tr:"Minecraft",en:"Minecraft"}, desc:{tr:"Rubidium & client",en:"Rubidium & client"} },
-    { slug:"vip", icon:"⭐", order:4, minWeight:2, name:{tr:"VIP Forum",en:"VIP Lounge"}, desc:{tr:"Sadece VIP+",en:"VIP+ only"} },
-    { slug:"staff", icon:"🛡️", order:5, minWeight:3, name:{tr:"Yetkili Alanı",en:"Staff Area"}, desc:{tr:"Mod+",en:"Mod+ only"} }
+    { slug:"duyurular", icon:"📢", order:1, minWeight:0, postWeight:3, guest:true, name:{tr:"Duyurular",en:"Announcements"}, desc:{tr:"Resmi RiseBunny duyuruları — sadece yetkililer yazar",en:"Official news — staff only writes"} },
+    { slug:"minecraft", icon:"⛏️", order:2, minWeight:1, name:{tr:"Minecraft",en:"Minecraft"}, desc:{tr:"Rubidium & client",en:"Rubidium & client"} },
+    { slug:"vip", icon:"⭐", order:3, minWeight:2, name:{tr:"VIP Forum",en:"VIP Lounge"}, desc:{tr:"Sadece VIP+",en:"VIP+ only"} }
   ];
   const b = db.batch();
   cats.forEach(c => b.set(db.collection("categories").doc(c.slug), { ...c, stats:{threads:0,posts:0} }));
-  await b.commit();
+  ["genel","staff"].forEach(s => b.delete(db.collection("categories").doc(s)));
+  await b.commit().catch(async () => {
+    for (const c of cats) await db.collection("categories").doc(c.slug).set({ ...c, stats:{threads:0,posts:0} });
+    await db.collection("categories").doc("genel").delete().catch(()=>{});
+    await db.collection("categories").doc("staff").delete().catch(()=>{});
+  });
 }
 
 /* ── Ana sayfa ── */
@@ -154,22 +187,23 @@ async function renderHome() {
   cats.sort((a,b) => (a.order||0) - (b.order||0));
   let cards = "";
   cats.forEach(c => {
-    if ((c.minWeight||0) > myW()) return;
+    if (!canView(c)) return;
     cards += `<a class="rb-card" href="#/c/${esc(c.slug)}">
       <div class="rb-icon">${esc(c.icon||"💬")}</div>
-      <div class="rb-info"><h3>${esc((c.name&&c.name[lang])||(c.name&&c.name.tr)||c.slug)} ${(c.minWeight||0)>=2?"🔒":""}</h3>
+      <div class="rb-info"><h3>${esc((c.name&&c.name[lang])||(c.name&&c.name.tr)||c.slug)}
+        ${(c.minWeight||0)>=2?"🔒":""}${c.locked?"🔐":""}</h3>
         <p>${esc((c.desc&&c.desc[lang])||(c.desc&&c.desc.tr)||"")}</p></div>
       <div class="rb-stats"><div class="rb-stat"><b>${(c.stats&&c.stats.threads)||0}</b><span>${t("threads")}</span></div></div></a>`;
   });
   view().innerHTML = `<div class="forum-wrap"><h2 class="rb-h2">${t("cats")}</h2>
-    ${cards || `<div class="rb-empty">${myW()>=5 ? t("empty") : t("soon")}</div>`}</div>`;
+    ${cards || `<div class="rb-empty">${t("soon")}</div>`}</div>`;
 }
 
-/* ── Konu listesi ── */
+/* ── Konu listesi ─ */
 async function renderCategory(slug) {
   const cd = await db.collection("categories").doc(slug).get();
-  if (!cd.exists || (cd.data().minWeight||0) > myW())
-    return view().innerHTML = `<div class="forum-wrap"><a class="rb-back" href="#/">${t("back")}</a><div class="rb-empty">${t("noPerm")}</div></div>`;
+  if (!cd.exists || !canView(cd.data()))
+    return view().innerHTML = `<div class="forum-wrap"><a class="rb-back" href="#/">${t("back")}</a><div class="rb-empty">${CUR()?t("noPerm"):t("guestOnly")}</div></div>`;
   const c = cd.data();
   const snap = await db.collection("threads").where("categoryId","==",slug).get();
   const list = []; snap.forEach(d => list.push({ id: d.id, ...d.data() }));
@@ -178,12 +212,14 @@ async function renderCategory(slug) {
     <a class="rb-back" href="#/">${t("back")}</a>
     <div class="rb-cathead"><span class="rb-icon">${esc(c.icon||"💬")}</span>
       <h2>${esc((c.name&&c.name[lang])||c.slug)}</h2></div>
+    ${myW()>=3 ? `<div class="rb-modbar"><button class="rb-ghost" onclick="RB.lockCat('${esc(slug)}',${!c.locked})">${c.locked?t("unlock"):t("lock")} 🗂️</button></div>` : ""}
+    ${c.locked ? `<div class="rb-empty" style="padding:10px 0">${t("catLocked")}</div>` : ""}
     ${list.map(th => `<a class="rb-card" href="#/t/${th.id}">
       <div class="rb-info"><h3>${th.pinned?`<em class="rb-pin">${t("pinned")}</em> `:""}${th.locked?`<em class="rb-lock">${t("locked")}</em> `:""}${esc(th.title)}</h3>
         <p>${badge(th.authorRole||"member")} <b>${esc(th.authorName)}</b> · ${fmt(th.createdAt)}</p></div>
       <div class="rb-stats"><div class="rb-stat"><b>${th.replies||0}</b><span>${t("replies")}</span></div>
       <div class="rb-stat"><b>${th.views||0}</b><span>${t("views")}</span></div></div></a>`).join("") || `<div class="rb-empty">${t("empty")}</div>`}
-    <a class="rb-fab" href="${CUR() ? `#/new/${esc(slug)}` : "#/login"}" title="${t("newThread")}">＋</a></div>`;
+    ${canPost(c) ? `<a class="rb-fab" href="#/new/${esc(slug)}" title="${t("newThread")}">＋</a>` : ""}</div>`;
 }
 
 /* ── Konu + yanıtlar ── */
@@ -191,7 +227,9 @@ async function renderThread(id) {
   const td = await db.collection("threads").doc(id).get();
   if (!td.exists) return view().innerHTML = `<div class="forum-wrap"><a class="rb-back" href="#/">${t("back")}</a><div class="rb-empty">${t("notFound")}</div></div>`;
   const th = td.data();
-  if ((th.minWeight||0) > myW()) return view().innerHTML = `<div class="forum-wrap"><a class="rb-back" href="#/">${t("back")}</a><div class="rb-empty">${t("noPerm")}</div></div>`;
+  const cd = await db.collection("categories").doc(th.categoryId).get();
+  const c = cd.exists ? cd.data() : {};
+  if (!canView(c)) return view().innerHTML = `<div class="forum-wrap"><a class="rb-back" href="#/">${t("back")}</a><div class="rb-empty">${CUR()?t("noPerm"):t("guestOnly")}</div></div>`;
   db.collection("threads").doc(id).update({ views: firebase.firestore.FieldValue.increment(1) }).catch(()=>{});
   const ps = await db.collection("posts").where("threadId","==",id).get();
   const arr = []; ps.forEach(d => arr.push({ id: d.id, ...d.data() }));
@@ -203,7 +241,7 @@ async function renderThread(id) {
       ${p.image ? `<img class="rb-postimg" src="${p.image}" alt="">` : ""}
       ${myW()>=3 ? `<button class="rb-ghost" onclick="RB.delPost('${p.id}')">${t("del")}</button>` : ""}</div>`;
   });
-  const canReply = (CUR() && !th.locked) || myW() >= 3;
+  const cp = canPost(c);
   view().innerHTML = `<div class="forum-wrap">
     <a class="rb-back" href="#/c/${esc(th.categoryId)}">${t("back")}</a>
     <div class="rb-threadhead"><h2>${esc(th.title)}</h2>
@@ -216,12 +254,12 @@ async function renderThread(id) {
     <div class="rb-post rb-op"><div class="rb-postbody">${esc(th.content).replace(/\n/g,"<br>")}</div>
       ${th.image ? `<img class="rb-postimg" src="${th.image}" alt="">` : ""}</div>
     ${posts}
-    ${CUR() && canReply ? `<div class="rb-replybox"><textarea id="replyBox" placeholder="${t("reply")}"></textarea>
-      ${myW()>=3 ? `<div class="rb-attach"><label class="rb-ghost">${t("attach")}<input type="file" id="replyFile" accept="image/*" hidden></label><img id="replyPrev" class="rb-prev" hidden></div>` : ""}
+    ${CUR() && cp && ((CUR() && !th.locked) || myW() >= 3) ? `<div class="rb-replybox"><textarea id="replyBox" placeholder="${t("reply")}"></textarea>
+      ${myW()>=3 ? `<div class="rb-attach"><label class="rb-ghost">${t("attach")}<input type="file" id="replyFile" accept="image/*" hidden></label><img id="replyPrev" class="rb-prev" hidden><button class="rb-ghost rb-danger" id="replyImgX" hidden onclick="RB.clearImg('replyPrev','replyImgX')">✕</button></div>` : ""}
       <button class="rb-btn" onclick="RB.reply('${id}','${esc(th.categoryId)}',${th.minWeight||0})">${t("send")}</button></div>`
-    : CUR() ? `<div class="rb-empty">${t("locked")}</div>`
+    : CUR() ? `<div class="rb-empty">${th.locked ? t("locked") : t("catLocked")}</div>`
     : `<div style="text-align:center"><a class="rb-btn" href="#/login">${t("login")}</a></div>`}</div>`;
-  bindFile("replyFile", "replyPrev");
+  bindFile("replyFile", "replyPrev", "replyImgX");
 }
 
 /* ── Yeni konu ── */
@@ -230,9 +268,24 @@ async function renderNew(slug) {
   view().innerHTML = `<div class="forum-wrap"><a class="rb-back" href="#/c/${esc(slug)}">${t("back")}</a>
     <div class="rb-form"><h2>${t("newThread")}</h2><input id="ntTitle" placeholder="${t("title")}" maxlength="90">
     <textarea id="ntBody" rows="5" placeholder="${t("content")}"></textarea>
-    ${myW()>=3 ? `<div class="rb-attach"><label class="rb-ghost">${t("attach")}<input type="file" id="ntFile" accept="image/*" hidden></label><img id="ntPrev" class="rb-prev" hidden></div>` : ""}
+    ${myW()>=3 ? `<div class="rb-attach"><label class="rb-ghost">${t("attach")}<input type="file" id="ntFile" accept="image/*" hidden></label><img id="ntPrev" class="rb-prev" hidden><button class="rb-ghost rb-danger" id="ntImgX" hidden onclick="RB.clearImg('ntPrev','ntImgX')">✕</button></div>` : ""}
     <button class="rb-btn" onclick="RB.newThread('${esc(slug)}')">${t("send")}</button></div></div>`;
-  bindFile("ntFile", "ntPrev");
+  bindFile("ntFile", "ntPrev", "ntImgX");
+}
+
+/* ── Bildirimler ── */
+async function renderNotif() {
+  const u = CUR(); if (!u) return renderLogin();
+  const snap = await db.collection("notifications").where("userId","==",u.uid).get();
+  const list = []; snap.forEach(d => list.push({ id: d.id, ...d.data() }));
+  list.sort((a,b) => secs(b.createdAt) - secs(a.createdAt));
+  const icons = { reply:"💬", role:"🎖️", system:"🐰" };
+  view().innerHTML = `<div class="forum-wrap"><a class="rb-back" href="#/">${t("back")}</a>
+    <h2 class="rb-h2">🔔 ${t("notif")}</h2>
+    <div style="text-align:right;margin-bottom:10px"><button class="rb-ghost" onclick="RB.readAll()">${t("readAll")}</button></div>
+    ${list.map(n => `<div class="rb-notif ${n.read?"":"unread"}" onclick="RB.openNotif('${n.id}','${esc(n.threadId||"")}')">
+      <span class="ni">${icons[n.type]||"🐰"}</span>
+      <div><p>${esc(n.text)}</p><small>${esc(n.from||"")} · ${fmt(n.createdAt)}</small></div></div>`).join("") || `<div class="rb-empty">🔔 —</div>`}</div>`;
 }
 
 /* ── Profil ── */
@@ -263,14 +316,15 @@ function renderLogin() {
   document.getElementById("authPw").addEventListener("keydown", e => { if (e.key==="Enter") RB.doLogin(); });
 }
 
-/* ── Yetkili Paneli (sekmeli) ── */
+/* ── Yetkili Paneli (modern, sekmeli, aramalı) ── */
+let ADM_USERS = [];
 async function renderAdmin() {
   view().innerHTML = `<div class="forum-wrap"><a class="rb-back" href="#/">${t("back")}</a>
     <h2 class="rb-h2">${t("admin")}</h2>
     <div class="rb-admtabs">
-      <button class="rb-at active" data-at="users">${t("users")}</button>
-      <button class="rb-at" data-at="threads">${t("threads")}</button>
-      <button class="rb-at" data-at="cats">${t("cats")}</button>
+      <button class="rb-at active" data-at="users">👥 ${t("users")}</button>
+      <button class="rb-at" data-at="threads">💬 ${t("threads")}</button>
+      <button class="rb-at" data-at="cats">🗂️ ${t("cats")}</button>
     </div>
     <div id="adm-body"><div class="rb-empty">🐰...</div></div></div>`;
   document.querySelectorAll(".rb-at").forEach(b => b.addEventListener("click", () => {
@@ -285,12 +339,9 @@ async function admSection(kind) {
   body.innerHTML = '<div class="rb-empty">🐰...</div>';
   if (kind === "users") {
     const us = await db.collection("users").get();
-    let rows = ""; us.forEach(d => { const u = d.data();
-      rows += `<div class="rb-row"><b>${esc(u.username)}${u.banned?' 🚫':''}</b> ${badge(u.role)}
-        <select onchange="RB.setRole('${d.id}',this.value)">${Object.keys(RBAuth.WEIGHT).map(r=>`<option ${r===u.role?"selected":""}>${r}</option>`).join("")}</select>
-        <button class="rb-ghost rb-danger" onclick="RB.ban('${d.id}',${!u.banned})">${u.banned?t("unban"):t("ban")}</button></div>`;
-    });
-    body.innerHTML = rows || '<div class="rb-empty">—</div>';
+    ADM_USERS = []; us.forEach(d => ADM_USERS.push({ uid: d.id, ...d.data() }));
+    body.innerHTML = `<input class="rb-search" id="adm-search" placeholder="${t("search")}" oninput="RB.filterUsers(this.value)"><div id="adm-users"></div>`;
+    RB.filterUsers("");
   }
   if (kind === "threads") {
     const th = await db.collection("threads").get();
@@ -307,6 +358,7 @@ async function admSection(kind) {
     let rows = ""; snap.forEach(d => { const c = d.data();
       rows += `<div class="rb-row"><b>${esc(c.icon||"💬")} ${esc((c.name&&c.name.tr)||d.id)}</b>
         <span class="rb-badge" data-role="${(c.minWeight||0)>=3?"moderator":(c.minWeight||0)===2?"vip":"member"}">W:${c.minWeight||0}</span>
+        <button class="rb-ghost" onclick="RB.lockCat('${esc(d.id)}',${!c.locked})">${c.locked?t("unlock"):t("lock")}</button>
         <button class="rb-ghost rb-danger" onclick="RB.delCat('${esc(d.id)}')">${t("del")}</button></div>`;
     });
     body.innerHTML = rows + (myW()>=5 ? `<div class="rb-admform">
@@ -314,6 +366,7 @@ async function admSection(kind) {
         <input id="nc-slug" placeholder="slug (orn. valorant)" style="flex:1;min-width:120px">
         <input id="nc-icon" placeholder="🎮" style="width:70px">
         <select id="nc-weight"><option value="0">Herkese (0)</option><option value="1">Üye (1)</option><option value="2">VIP (2)</option><option value="3">Staff (3)</option></select>
+        <select id="nc-postw"><option value="-1">Yazma: kategoriyle aynı</option><option value="3">Yazma: sadece Mod+</option></select>
       </div>
       <input id="nc-tr" placeholder="İsim (TR)"><input id="nc-en" placeholder="Name (EN)">
       <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -325,6 +378,27 @@ async function admSection(kind) {
 
 /* ══════════ AKSİYONLAR ══════════ */
 const RB = {};
+RB.clearImg = (prevId, xId) => { window.__rbImg = "";
+  const p = document.getElementById(prevId); if (p) p.hidden = true;
+  const x = document.getElementById(xId); if (x) x.hidden = true; };
+RB.filterUsers = q => {
+  q = (q||"").toLowerCase();
+  const box = document.getElementById("adm-users"); if (!box) return;
+  const list = ADM_USERS.filter(u => (u.username||"").toLowerCase().includes(q));
+  box.innerHTML = list.map(u => `<div class="rb-row"><b>${esc(u.username)}${u.banned?' 🚫':''}</b> ${badge(u.role)}
+    <select onchange="RB.setRole('${u.uid}',this.value)">${Object.keys(RBAuth.WEIGHT).map(r=>`<option ${r===u.role?"selected":""}>${r}</option>`).join("")}</select>
+    <button class="rb-ghost rb-danger" onclick="RB.ban('${u.uid}',${!u.banned})">${u.banned?t("unban"):t("ban")}</button></div>`).join("") || '<div class="rb-empty">—</div>';
+};
+RB.readAll = async () => {
+  const u = CUR(); if (!u) return;
+  const snap = await db.collection("notifications").where("userId","==",u.uid).where("read","==",false).get();
+  const b = db.batch(); snap.forEach(d => b.update(d.ref, { read: true }));
+  await b.commit().catch(()=>{}); route();
+};
+RB.openNotif = async (id, threadId) => {
+  await db.collection("notifications").doc(id).update({ read: true }).catch(()=>{});
+  if (threadId) location.hash = "#/t/" + threadId; else route();
+};
 RB.logout = async () => { sessionStorage.removeItem("rb_fadmin"); await RBAuth.logout(); location.hash = "#/"; };
 RB.doLogin = async () => {
   const m = document.getElementById("authMsg");
@@ -344,19 +418,29 @@ RB.seed = async () => { await seedCats(); admSection("cats"); };
 RB.addCat = async () => {
   const slug = (document.getElementById("nc-slug").value||"").trim().toLowerCase().replace(/[^a-z0-9-]+/g,"-");
   if (!slug) return;
+  const pw = parseInt(document.getElementById("nc-postw").value,10);
   await db.collection("categories").doc(slug).set({
     slug, icon: document.getElementById("nc-icon").value || "💬", order: 99,
     minWeight: parseInt(document.getElementById("nc-weight").value,10) || 0,
+    ...(pw >= 0 ? { postWeight: pw } : {}), guest: false,
     name: { tr: document.getElementById("nc-tr").value || slug, en: document.getElementById("nc-en").value || slug },
     desc: { tr: "", en: "" }, stats: { threads: 0, posts: 0 }
   });
   admSection("cats");
 };
 RB.delCat = async id => { if (!confirm("?")) return; await db.collection("categories").doc(id).delete(); admSection("cats"); };
+RB.lockCat = (slug,v) => db.collection("categories").doc(slug).update({ locked: v }).then(route);
 RB.reply = async (tid, cat, mw) => {
   const txt = (document.getElementById("replyBox").value || "").trim();
   if (!txt && !window.__rbImg) return;
-  const u = CUR();
+  const u = CUR(); if (!u) return;
+  const cd = await db.collection("categories").doc(cat).get();
+  const c = cd.exists ? cd.data() : {};
+  if (!canPost(c)) return alert(t("noPerm"));
+  const td = await db.collection("threads").doc(tid).get();
+  if (!td.exists) return;
+  const th = td.data();
+  if (th.locked && myW() < 3) return alert(t("locked"));
   await db.collection("posts").add({ threadId:tid, categoryId:cat, minWeight:mw,
     content:txt, image: window.__rbImg || "", authorId:u.uid, authorName:u.username, authorRole:u.role,
     edited:false, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
@@ -365,17 +449,24 @@ RB.reply = async (tid, cat, mw) => {
     replies: firebase.firestore.FieldValue.increment(1),
     lastPostAt: firebase.firestore.FieldValue.serverTimestamp() });
   db.collection("users").doc(u.uid).update({ "stats.posts": firebase.firestore.FieldValue.increment(1) }).catch(()=>{});
+  db.collection("categories").doc(cat).update({ "stats.posts": firebase.firestore.FieldValue.increment(1) }).catch(()=>{});
+  if (th.authorId !== u.uid) notifyUser(th.authorId, "reply", `${u.username} "${th.title}" konusuna yanıt yazdı`, tid);
   route();
 };
 RB.newThread = async slug => {
   const title = (document.getElementById("ntTitle").value || "").trim();
   const body  = (document.getElementById("ntBody").value || "").trim();
   if (!title || !body) return;
+  const u = CUR(); if (!u) return;
   const cd = await db.collection("categories").doc(slug).get();
-  const cat = cd.exists ? cd.data() : {};
-  const u = CUR();
+  const c = cd.exists ? cd.data() : {};
+  if (!canPost(c)) return alert(t("noPerm"));
+  if (myW() < 3) {
+    const mine = await db.collection("threads").where("authorId","==",u.uid).get();
+    if (mine.size >= 2) return alert(t("maxThread"));
+  }
   await db.collection("threads").add({ title, content:body, categoryId:slug,
-    image: window.__rbImg || "", minWeight:(cat&&cat.minWeight)||0, authorId:u.uid, authorName:u.username, authorRole:u.role,
+    image: window.__rbImg || "", minWeight:(c.minWeight||0), authorId:u.uid, authorName:u.username, authorRole:u.role,
     locked:false, pinned:false, views:0, replies:0,
     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     lastPostAt: firebase.firestore.FieldValue.serverTimestamp() });
@@ -386,12 +477,44 @@ RB.newThread = async slug => {
 };
 RB.lock = (id,v) => db.collection("threads").doc(id).update({ locked:v }).then(route);
 RB.pin  = (id,v) => db.collection("threads").doc(id).update({ pinned:v }).then(route);
-RB.delThread = async id => { if (!confirm("?")) return;
+RB.delThread = async id => {
+  if (!confirm("?")) return;
+  const td = await db.collection("threads").doc(id).get();
   const ps = await db.collection("posts").where("threadId","==",id).get();
-  const b = db.batch(); ps.forEach(p => b.delete(p.ref)); b.delete(db.collection("threads").doc(id));
-  await b.commit(); location.hash = "#/"; };
-RB.delPost = id => db.collection("posts").doc(id).delete().then(route);
-RB.setRole = (uid,role) => db.collection("users").doc(uid).update({ role }).then(route);
+  const b = db.batch();
+  ps.forEach(p => b.delete(p.ref));
+  b.delete(db.collection("threads").doc(id));
+  if (td.exists) {
+    const th = td.data();
+    try {
+      b.update(db.collection("categories").doc(th.categoryId), {
+        "stats.threads": firebase.firestore.FieldValue.increment(-1),
+        "stats.posts": firebase.firestore.FieldValue.increment(-(th.replies||0)) });
+      if (th.authorId) b.update(db.collection("users").doc(th.authorId), { "stats.threads": firebase.firestore.FieldValue.increment(-1) });
+    } catch (e) {}
+  }
+  await b.commit().catch(async () => {
+    ps.forEach(async p => await p.ref.delete());
+    await db.collection("threads").doc(id).delete();
+  });
+  location.hash = "#/";
+};
+RB.delPost = async id => {
+  const pd = await db.collection("posts").doc(id).get();
+  if (!pd.exists) return;
+  const p = pd.data();
+  const b = db.batch();
+  b.delete(pd.ref);
+  try {
+    b.update(db.collection("threads").doc(p.threadId), { replies: firebase.firestore.FieldValue.increment(-1) });
+    if (p.authorId) b.update(db.collection("users").doc(p.authorId), { "stats.posts": firebase.firestore.FieldValue.increment(-1) });
+    if (p.categoryId) b.update(db.collection("categories").doc(p.categoryId), { "stats.posts": firebase.firestore.FieldValue.increment(-1) });
+  } catch (e) {}
+  await b.commit().catch(() => pd.ref.delete());
+  route();
+};
+RB.setRole = (uid,role) => db.collection("users").doc(uid).update({ role }).then(() =>
+  notifyUser(uid, "role", `Yetkin güncellendi → ${role}`)).then(route);
 RB.ban = (uid,banned) => db.collection("users").doc(uid).update({ banned }).then(route);
 window.RB = RB;
 
