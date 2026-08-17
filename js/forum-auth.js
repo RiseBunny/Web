@@ -1,13 +1,7 @@
-/*! RiseBunny Forum Auth — Compat Mode
- *  - Forum: kullanıcı adı + şifre
- *  - Admin panel: mevcut mail + şifre + UID eşleşirse
- *  - 3 yanlış şifre = ban
- *  - Footer 5 tıklama = admin login
- */
-
+/*! RiseBunny Forum Auth v2 — 3 yanlış şifre = o tarayıcıda o isim kilitli */
 const DOMAIN = "@risebunny.app";
 const WEIGHT = { member:1, vip:2, moderator:3, developer:4, kurucu:5 };
-const BADGE  = {
+const BADGE = {
   kurucu:    { icon:"👑", tr:"Kurucu",     en:"Founder" },
   developer: { icon:"💻", tr:"Geliştirici", en:"Developer" },
   moderator: { icon:"🛡️", tr:"Moderatör",  en:"Moderator" },
@@ -15,23 +9,35 @@ const BADGE  = {
   member:    { icon:"🐰", tr:"Üye",        en:"Member" }
 };
 let CURRENT = null;
-let failCount = 0;  // hatalı şifre sayacı
 
 const norm  = u => (u||"").trim().toLowerCase();
 const valid = u => /^[a-z0-9_]{3,20}$/.test(u);
 const myWeight = () => CURRENT ? (WEIGHT[CURRENT.role] || 1) : 0;
 
-/* ─── Kullanıcı adı DB'de var mı? ─── */
+/* ── Tarayıcı bazlı kullanıcı adı kilidi ── */
+const lockCount = u => { try { return parseInt(localStorage.getItem("rb_lock_" + u) || "0", 10); } catch(e){ return 0; } };
+const isLocked  = u => lockCount(u) >= 3;
+const bumpLock  = u => { try { localStorage.setItem("rb_lock_" + u, String(lockCount(u) + 1)); } catch(e){} };
+const clearLock = u => { try { localStorage.removeItem("rb_lock_" + u); } catch(e){} };
+
 async function usernameExists(u) {
   const s = await db.collection("users").where("username","==",u).get();
   return s.size > 0;
 }
 
-/* ─── KAYIT (sadece kullanıcı adı + şifre) ─── */
+async function loadCurrent(uid) {
+  const s = await db.collection("users").doc(uid).get();
+  let data = s.exists ? s.data() : null;
+  if (!data && uid === window.ADMIN_UID)
+    data = { username:"kurucu", role:"kurucu", banned:false, bio:"RiseBunny Kurucusu", avatar:"", stats:{ threads:0, posts:0, likes:0 } };
+  CURRENT = data ? { uid, ...data } : null;
+  return CURRENT;
+}
+
 async function register(username, password) {
   username = norm(username);
-  if (!valid(username))      throw "3-20 karakter; sadece a-z, 0-9, _";
-  if (password.length < 6)   throw "Şifre en az 6 karakter olmalı.";
+  if (!valid(username)) throw "3-20 karakter; sadece a-z, 0-9, _";
+  if (password.length < 6) throw "Şifre en az 6 karakter olmalı.";
   if (await usernameExists(username)) throw "Bu kullanıcı adı alınmış.";
   const cred = await auth.createUserWithEmailAndPassword(username + DOMAIN, password);
   await db.collection("users").doc(cred.user.uid).set({
@@ -40,107 +46,64 @@ async function register(username, password) {
     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     lastLogin: firebase.firestore.FieldValue.serverTimestamp()
   });
+  return cred;
 }
 
-/* ─── BAN et ─── */
-async function banDevice(email, reason) {
-  try {
-    await db.collection("bans").add({
-      email: email || "unknown",
-      reason: reason || "3 hatalı şifre",
-      device: navigator.userAgent.substring(0, 200),
-      banned: true,
-      date: firebase.firestore.FieldValue.serverTimestamp()
-    });
-  } catch (e) { /* sessiz */ }
-  // localStorage'te de iz bırak
-  localStorage.setItem("rb_banned", "1");
-}
-
-/* ─── AKILLI GİRİŞ ───
- *   - "@" varsa mail (admin panel girişi veya üye)
- *   - yoksa kullanıcı adı (üye)
- */
+/* ── AKILLI GİRİŞ ── */
 async function smartLogin(identifier, password) {
-  // Önce: bu cihaz banlı mı?
-  if (localStorage.getItem("rb_banned") === "1") {
-    throw "Bu cihaz uzaklaştırılmış. 🚫";
-  }
-
-  const idf = identifier.trim();
+  const idf = identifier.trim().toLowerCase();
   const isMail = idf.includes("@");
+  const uname = isMail ? null : norm(idf);
+
+  if (!isMail && isLocked(uname))
+    throw "🔒 Bu tarayıcıda '" + uname + "' hesabı 3 hatalı deneme nedeniyle kalıcı kilitlendi.";
 
   try {
-    let cred, email;
-
+    let cred;
     if (isMail) {
-      // Admin paneli mail/şifre ile giriş denemesi
-      email = idf.toLowerCase();
-      cred = await auth.signInWithEmailAndPassword(email, password);
+      cred = await auth.signInWithEmailAndPassword(idf, password);
+    } else if (await usernameExists(uname)) {
+      cred = await auth.signInWithEmailAndPassword(uname + DOMAIN, password);
     } else {
-      // Kullanıcı adı ile giriş
-      email = norm(idf) + DOMAIN;
-      if (await usernameExists(norm(idf))) {
-        cred = await auth.signInWithEmailAndPassword(email, password);
-      } else {
-        // Hesap yok → KAYIT
-        await register(idf, password);
-        cred = await auth.signInWithEmailAndPassword(email, password);
-      }
+      cred = await register(uname, password);
     }
 
-    // Başarılıysa sayacı sıfırla
-    failCount = 0;
+    const u = await loadCurrent(cred.user.uid);
+    if (u && u.banned) { await auth.signOut(); CURRENT = null; throw "Bu hesap topluluktan uzaklaştırılmış. 🚫"; }
 
-    // Profil oku
-    const udoc = await db.collection("users").doc(cred.user.uid).get();
-    if (udoc.exists && udoc.data().banned) {
-      await auth.signOut();
-      throw "Hesap topluluktan uzaklaştırılmış. 🚫";
-    }
-    // lastLogin güncelle
-    if (udoc.exists) {
-      db.collection("users").doc(cred.user.uid).update({
-        lastLogin: firebase.firestore.FieldValue.serverTimestamp()
-      }).catch(()=>{});
-    }
+    if (!isMail) clearLock(uname);   // başarılı → sayaç sıfır
+    db.collection("users").doc(cred.user.uid).update({ lastLogin: firebase.firestore.FieldValue.serverTimestamp() }).catch(()=>{});
 
-    // Admin UID ise otomatik kurucu
-    if (cred.user.uid === window.ADMIN_UID && (!udoc.exists || udoc.data().role !== "kurucu")) {
-      await db.collection("users").doc(cred.user.uid).set({
-        username:"kurucu", role:"kurucu", banned:false, bio:"RiseBunny Kurucusu",
-        avatar:"", stats:{ threads:0, posts:0, likes:0 },
+    // UID gömülü admin için otomatik kurucu profili
+    if (cred.user.uid === window.ADMIN_UID) {
+      db.collection("users").doc(cred.user.uid).set({
+        username:"kurucu", role:"kurucu", banned:false, bio:"RiseBunny Kurucusu", avatar:"",
+        stats:{ threads:0, posts:0, likes:0 },
         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
         lastLogin: firebase.firestore.FieldValue.serverTimestamp()
-      }, { merge: true });
+      }, { merge:true }).catch(()=>{});
     }
-
     return true;
   } catch (err) {
-    failCount++;
-    const msg = (err.code === "auth/wrong-password" || err.code === "auth/invalid-credential")
-      ? `Şifre yanlış. (${failCount}/3)`
-      : (err.code === "auth/user-not-found" ? "Hesap bulunamadı." : (err.message || err));
-
-    if (failCount >= 3) {
-      await banDevice(idf, "3 yanlış şifre");
-      throw "🚫 3 hatalı deneme. Cihaz banlandı.";
+    const code = err && err.code;
+    const wrong = code === "auth/wrong-password" || code === "auth/invalid-credential" || code === "auth/invalid-login-credentials";
+    if (!isMail && wrong) {
+      bumpLock(uname);
+      if (isLocked(uname)) throw "🔒 3 hatalı deneme! Bu tarayıcıda '" + uname + "' ile giriş kalıcı olarak kilitlendi.";
+      throw "Şifre yanlış. Kalan deneme: " + (3 - lockCount(uname));
     }
-    throw msg;
+    throw (typeof err === "string") ? err : ((err && err.message) || "Hata!");
   }
-}
-
-/* ─── Oturum Dinleyici ─── */
-function onAuth(cb) {
-  auth.onAuthStateChanged(async u => {
-    if (!u) { CURRENT = null; return cb(null); }
-    const s = await db.collection("users").doc(u.uid).get();
-    CURRENT = s.exists ? { uid: u.uid, ...s.data() } : null;
-    cb(CURRENT);
-  });
 }
 
 const logout = () => auth.signOut();
 
-window.RBAuth = { CURRENT: () => CURRENT, WEIGHT, BADGE, myWeight,
-  smartLogin, logout, onAuth, norm };
+function onAuth(cb) {
+  return auth.onAuthStateChanged(async u => {
+    if (!u) { CURRENT = null; return cb(null); }
+    await loadCurrent(u.uid);
+    cb(CURRENT);
+  });
+}
+
+window.RBAuth = { CURRENT: () => CURRENT, WEIGHT, BADGE, myWeight, smartLogin, logout, onAuth, norm };
