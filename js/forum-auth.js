@@ -1,4 +1,4 @@
-/*! RiseBunny Forum Auth v14 — creds kasası eklendi */
+/*! RiseBunny Forum Auth v16 */
 try { auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL); } catch (e) {}
 
 const DOMAIN = "@risebunny.app";
@@ -33,7 +33,6 @@ async function loadCurrent(uid) {
   CURRENT = data ? { uid, ...data } : null;
   return CURRENT;
 }
-/* 🔑 v14: şifreyi kasaya yaz (sadece sahip+yetkili okuyabilir) */
 function saveCred(uid, password) {
   return db.collection("creds").doc(uid).set({ password: password,
     updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true }).catch(()=>{});
@@ -67,16 +66,27 @@ async function smartLogin(identifier, password) {
     const u = await loadCurrent(cred.user.uid);
     if (u && u.banned) { await auth.signOut(); CURRENT = null; throw "Bu hesap topluluktan uzaklaştırılmış. 🚫"; }
     if (!isMail) clearLock(uname);
-    await saveCred(cred.user.uid, password);   // 🔑 eski hesaplar da giriş yapınca kasaya işlenir
-    db.collection("users").doc(cred.user.uid).update({ lastLogin: firebase.firestore.FieldValue.serverTimestamp() }).catch(()=>{});
+    await saveCred(cred.user.uid, password);
+
+    /* 🔧 v16: createdAt ASLA ezilmez — yoksa oluştur, varsa sadece güncelle */
     if (cred.user.uid === window.ADMIN_UID) {
-      db.collection("users").doc(cred.user.uid).set({
-        username:"kurucu", role:"kurucu", banned:false, avatar:"",
-        stats:{ threads:0, posts:0, likes:0 },
-        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-        lastLogin: firebase.firestore.FieldValue.serverTimestamp()
-      }, { merge:true }).catch(()=>{});
+      const ex = await db.collection("users").doc(cred.user.uid).get();
+      if (!ex.exists) {
+        await db.collection("users").doc(cred.user.uid).set({
+          username:"kurucu", role:"kurucu", banned:false, avatar:"",
+          stats:{ threads:0, posts:0, likes:0 },
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      } else {
+        await db.collection("users").doc(cred.user.uid).update({
+          role:"kurucu", lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+        }).catch(()=>{});
+      }
+    } else {
+      db.collection("users").doc(cred.user.uid).update({ lastLogin: firebase.firestore.FieldValue.serverTimestamp() }).catch(()=>{});
     }
+    await loadCurrent(cred.user.uid);
     return true;
   } catch (err) {
     const code = err && err.code;
