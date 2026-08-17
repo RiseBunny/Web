@@ -1,6 +1,7 @@
-/*! RiseBunny — Bakım Modu + Banner X (v4) | admin.html hariç tüm sayfalar */
+/*! RiseBunny — Bakım Modu + Banner X (v5) | admin.html hariç tüm sayfalar */
 (function () {
 'use strict';
+if (window.__rbMntLoaded) return; window.__rbMntLoaded = true;
 try {
 var ADMIN_UID = 'oblLBCNGXEYF8plKq8KUr3m6o4f1';
 var CONF = {
@@ -12,9 +13,8 @@ var CONF = {
   appId: "1:203829901581:web:66d532c52155db4aea9844"
 };
 var FORCE = /[?&]mnt=1/.test(location.search);
-console.log('[RB] maintenance.js yüklendi ✓');
+console.log('[RB] maintenance.js v5 yüklendi ✓');
 
-/* ── Overlay ─ */
 var ov = document.createElement('div');
 ov.id = 'rb-maintenance';
 ov.style.cssText = 'display:none;position:fixed;inset:0;z-index:2147483647;background:#050507;color:#fff;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:24px;font-family:system-ui,sans-serif';
@@ -54,8 +54,11 @@ function start() {
       .then(function () { return loadSDK('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js'); });
   p.then(function () {
     try {
-      if (!firebase.apps.length) firebase.initializeApp(window.firebaseConfig);
-      var db = firebase.firestore(), auth = firebase.auth();
+      /* 🔑 ÇAKIŞMASIZ: default app varsa onu kullan, yoksa İSİMLİ app aç */
+      var app;
+      try { app = firebase.apps.length ? firebase.app() : firebase.initializeApp(window.firebaseConfig, 'rb-mnt'); }
+      catch (e) { try { app = firebase.app('rb-mnt'); } catch (e2) { return; } }
+      var db = app.firestore(), auth = app.auth();
       function decide(data) {
         if (!FORCE && isAdminish()) return;
         var decided = false;
@@ -79,7 +82,7 @@ function start() {
 }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 
-/* ══════════ BANNER X FIX (v4 — çift sigorta) ══════════ */
+/* ══════════ BANNER X FIX ══════════ */
 function findBanner(el) {
   while (el && el !== document.body) {
     var id = el.id || '', cl = (typeof el.className === 'string') ? el.className : '';
@@ -87,9 +90,6 @@ function findBanner(el) {
     el = el.parentNode;
   }
   return null;
-}
-function closeBtns(ban) {
-  return ban.querySelectorAll('button, [class*="close" i], [aria-label*="close" i], .fa-xmark, .fa-times');
 }
 function hideBanner(ban) {
   ban.style.display = 'none';
@@ -124,7 +124,7 @@ function patchBanner() {
     try {
       if (!admin && saved && saved === txt) { el.style.display = 'none'; continue; }
       if (saved && saved !== txt) sessionStorage.removeItem('rb_banner_hidden_text');
-      var btns = closeBtns(el);
+      var btns = el.querySelectorAll('button, [class*="close" i], .fa-xmark, .fa-times');
       if (!btns.length) {
         var b = document.createElement('button');
         b.type = 'button'; b.innerHTML = '✕'; b.setAttribute('data-rb-x', '1');
