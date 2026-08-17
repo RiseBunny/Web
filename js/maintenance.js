@@ -1,4 +1,4 @@
-/*! RiseBunny — Bakım Modu + Banner X Fix (tüm sayfalar, admin hariç) */
+/*! RiseBunny — Bakım Modu + Banner X Fix (v3) | Tüm sayfalar, admin.html hariç */
 (function () {
 'use strict';
 var ADMIN_UID = 'oblLBCNGXEYF8plKq8KUr3m6o4f1';
@@ -10,6 +10,7 @@ var CONF = {
   messagingSenderId: "203829901581",
   appId: "1:203829901581:web:66d532c52155db4aea9844"
 };
+var FORCE = /[?&]mnt=1/.test(location.search);   // ?mnt=1 → bakımı ZORLA göster (test)
 
 /* ── Overlay ── */
 var ov = document.createElement('div');
@@ -31,7 +32,6 @@ function showMaintenance(m) {
   ov.style.display = 'flex';
   document.body.style.overflow = 'hidden';
 }
-
 function isAdminish() {
   try {
     var tok = sessionStorage.getItem('rb_admin_token');
@@ -42,9 +42,7 @@ function isAdminish() {
   } catch (e) {}
   return false;
 }
-
 function loadSDK(src, cb) { var s = document.createElement('script'); s.src = src; s.onload = cb; s.onerror = cb; document.head.appendChild(s); }
-
 function start() {
   if (!window.firebaseConfig) window.firebaseConfig = CONF;
   if (!window.firebase) {
@@ -55,19 +53,18 @@ function start() {
     });
   } else run();
 }
-
 function run() {
   try {
     if (!firebase.apps.length) firebase.initializeApp(window.firebaseConfig);
     var db = firebase.firestore(), auth = firebase.auth();
     db.collection('config').doc('maintenance').get().then(function (s) {
-      if (!(s.exists && s.data().active)) return;      // bakım kapalı
-      if (isAdminish()) return;                        // token'lı admin
+      if (!(s.exists && s.data().active)) return;          // bakım kapalı
+      if (!FORCE && isAdminish()) return;                  // admin yutulmaz (test: ?mnt=1)
       var decided = false;
       var to = setTimeout(function () { if (!decided) { decided = true; showMaintenance(s.data()); } }, 1200);
-      auth.onAuthStateChanged(function (u) {           // kalıcı oturumdan admin (tüm sekmeler)
+      auth.onAuthStateChanged(function (u) {
         if (decided) return; decided = true; clearTimeout(to);
-        if (u && u.uid === ADMIN_UID) return;          // admin → bakım YOK
+        if (!FORCE && u && u.uid === ADMIN_UID) return;    // kalıcı admin oturumu
         showMaintenance(s.data());
       });
     }).catch(function () {});
@@ -75,7 +72,7 @@ function run() {
 }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 
-/* ══════════ BANNER X FIX — GÜVENLİ SÜRÜM ══════════ */
+/* ══════════ BANNER X FIX (v3 — admin asla otomatik gizlenmez) ══════════ */
 function findBanner(el) {
   while (el && el !== document.body) {
     var id = el.id || '', cl = (typeof el.className === 'string') ? el.className : '';
@@ -88,26 +85,31 @@ function looksClose(btn) {
   var sig = (btn.className || '') + ' ' + (btn.getAttribute('aria-label') || '') + ' ' + (btn.innerHTML || '') + ' ' + (btn.textContent || '');
   return /close|times|xmark|✕|×/i.test(sig) || btn.getAttribute('data-rb-x') === '1';
 }
-/* X tıklamasını ÖNCE biz yakalarız → bozuk handler hiç çalışmaz → beyaz sayfa yok */
+/* X tıklamasını ÖNCE biz yakalarız → bozuk handler çalışmaz → beyaz sayfa yok */
 document.addEventListener('click', function (e) {
   var t = e.target; if (!t || !t.closest) return;
   var btn = t.closest('button, [class*="close" i], .fa-xmark, .fa-times');
   if (!btn || !looksClose(btn)) return;
   var ban = findBanner(btn);
-  if (!ban || ban === document.body || ban.offsetHeight > 320 || ban.offsetHeight === 0) return; // GÜVENLİK: büyük blok asla gizlenmez
+  if (!ban || ban === document.body || ban.offsetHeight > 320 || ban.offsetHeight === 0) return;
   e.preventDefault(); e.stopPropagation();
   if (e.stopImmediatePropagation) e.stopImmediatePropagation();
   ban.style.display = 'none';
-  try { sessionStorage.setItem('rb_banner_hidden', '1'); } catch (er) {}
+  try { sessionStorage.setItem('rb_banner_hidden_text', (ban.textContent || '').trim().slice(0, 120)); } catch (er) {}
 }, true);
-/* Önce kapatıldıysa gizle + X yoksa ekle */
+/* Sayfa yüklenince: sadece AYNI METİN daha önce kapatıldıysa gizle; admin'de asla */
 function patchBanner() {
+  var admin = isAdminish();
+  var saved = null; try { saved = sessionStorage.getItem('rb_banner_hidden_text'); } catch (er) {}
   var nodes = document.querySelectorAll('[id*="banner" i], [class*="banner" i]');
   for (var i = 0; i < nodes.length; i++) {
     var el = nodes[i];
     if (el.id === 'rb-maintenance' || el.offsetHeight > 320 || el.offsetHeight === 0) continue;
+    var txt = (el.textContent || '').trim().slice(0, 120);
+    if (!txt || txt.length < 3) continue;
     try {
-      if (sessionStorage.getItem('rb_banner_hidden') === '1') { el.style.display = 'none'; continue; }
+      if (!admin && saved && saved === txt) { el.style.display = 'none'; continue; }
+      if (saved && saved !== txt) sessionStorage.removeItem('rb_banner_hidden_text'); // metin değişti → göster
       if (!el.querySelector('button, [class*="close" i], .fa-xmark, .fa-times')) {
         var b = document.createElement('button');
         b.type = 'button'; b.innerHTML = '✕'; b.setAttribute('data-rb-x', '1');
