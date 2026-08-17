@@ -1,4 +1,4 @@
-/*! RiseBunny Firebase Config + Bakım/Banner Motoru (v8) */
+/*! RiseBunny Firebase Config + Motor (v10) */
 window.firebaseConfig = {
   apiKey: "AIzaSyAq5Nafl9aI2TabzGsj5J9ij6lNwyfTguM",
   authDomain: "gen-lang-client-0590499912.firebaseapp.com",
@@ -14,9 +14,18 @@ window.ADMIN_UID = 'oblLBCNGXEYF8plKq8KUr3m6o4f1';
 if (window.__rbCoreLoaded) return; window.__rbCoreLoaded = true;
 if (/admin\.html(\?|$)/.test(location.pathname)) return;
 try {
-console.log('[RB] çekirdek v8 ✓');
+console.log('[RB] çekirdek v10 ✓');
 var ADMIN_UID = window.ADMIN_UID;
 var FORCE = /[?&]mnt=1/.test(location.search);
+
+function show404() {
+  fetch('404.html').then(function (r) { if (!r.ok) throw 0; return r.text(); }).then(function (h) {
+    document.open(); document.write(h); document.close();
+  }).catch(function () {
+    document.body.innerHTML = '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;background:#050507;color:#fff;font-family:sans-serif"><h1 style="font-size:5rem;margin:0">404</h1><p style="color:#9ca3af">Page Not Found</p></div>';
+  });
+}
+window.__rb404 = show404;
 
 var ov = document.createElement('div');
 ov.id = 'rb-maintenance';
@@ -55,6 +64,17 @@ function ownApp() {
 function run(app) {
   try {
     var db = app.firestore(), auth = app.auth();
+
+    /* 🔒 BAN İZLEYİCİ: banlı kullanıcı TÜM sayfalarda 404 yer */
+    try {
+      auth.onAuthStateChanged(function (u) {
+        if (!u) return;
+        db.collection('users').doc(u.uid).get().then(function (s) {
+          if (s.exists && s.data() && s.data().banned === true) show404();
+        }).catch(function () {});
+      });
+    } catch (e) {}
+
     function decide(data) {
       if (!FORCE && isAdminish()) return;
       var decided = false;
@@ -75,8 +95,6 @@ function run(app) {
     check(0);
   } catch (e) {}
 }
-/* 🔑 v8 KURALI: Sayfanın kendi app'i (app.js/forum) varsa ASLA app başlatma, sadece bekle.
-   Kendi init'i OLMAYAN sayfalarda (404 vb.) 4 sn sonra kendimiz açarız. */
 function tick(n) {
   n = n || 0;
   var hasOwn = !!document.querySelector('script[src*="app.js"], script[src*="forum-auth.js"]');
