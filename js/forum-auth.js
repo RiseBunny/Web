@@ -1,4 +1,4 @@
-/*! RiseBunny Forum Auth v16 */
+/*! RiseBunny Forum Auth v17 */
 try { auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL); } catch (e) {}
 
 const DOMAIN = "@risebunny.app";
@@ -37,21 +37,43 @@ function saveCred(uid, password) {
   return db.collection("creds").doc(uid).set({ password: password,
     updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true }).catch(()=>{});
 }
+function newProfile(uid, username, role) {
+  return db.collection("users").doc(uid).set({
+    username, role: role || "member", avatar:"", banned:false,
+    stats:{ threads:0, posts:0, likes:0 },
+    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+  });
+}
+
 async function register(username, password) {
   username = norm(username);
   if (!valid(username)) throw "3-20 karakter; sadece a-z, 0-9, _";
   if (password.length < 6) throw "Şifre en az 6 karakter olmalı.";
   if (await usernameExists(username)) throw "Bu kullanıcı adı alınmış.";
-  const cred = await auth.createUserWithEmailAndPassword(username + DOMAIN, password);
-  await db.collection("users").doc(cred.user.uid).set({
-    username, role:"member", avatar:"", banned:false,
-    stats:{ threads:0, posts:0, likes:0 },
-    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-    lastLogin: firebase.firestore.FieldValue.serverTimestamp()
-  });
+  let cred;
+  try {
+    cred = await auth.createUserWithEmailAndPassword(username + DOMAIN, password);
+  } catch (e) {
+    /* 🔧 v17: YETİM HESAP — Auth'ta kalmış kalıntıyı sahiplen */
+    if (e && e.code === "auth/email-already-in-use") {
+      try {
+        cred = await auth.signInWithEmailAndPassword(username + DOMAIN, password);
+      } catch (e2) {
+        throw "Bu ad eski bir hesaba kayıtlı. Aynı şifreyle dene veya paneliden şifreyi değiştir.";
+      }
+      const ex = await db.collection("users").doc(cred.user.uid).get();
+      if (!ex.exists) await newProfile(cred.user.uid, username, cred.user.uid === window.ADMIN_UID ? "kurucu" : "member");
+      await saveCred(cred.user.uid, password);
+      return cred;
+    }
+    throw (e && e.message) || e;
+  }
+  await newProfile(cred.user.uid, username);
   await saveCred(cred.user.uid, password);
   return cred;
 }
+
 async function smartLogin(identifier, password) {
   const idf = identifier.trim().toLowerCase();
   const isMail = idf.includes("@");
@@ -67,22 +89,10 @@ async function smartLogin(identifier, password) {
     if (u && u.banned) { await auth.signOut(); CURRENT = null; throw "Bu hesap topluluktan uzaklaştırılmış. 🚫"; }
     if (!isMail) clearLock(uname);
     await saveCred(cred.user.uid, password);
-
-    /* 🔧 v16: createdAt ASLA ezilmez — yoksa oluştur, varsa sadece güncelle */
     if (cred.user.uid === window.ADMIN_UID) {
       const ex = await db.collection("users").doc(cred.user.uid).get();
-      if (!ex.exists) {
-        await db.collection("users").doc(cred.user.uid).set({
-          username:"kurucu", role:"kurucu", banned:false, avatar:"",
-          stats:{ threads:0, posts:0, likes:0 },
-          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-          lastLogin: firebase.firestore.FieldValue.serverTimestamp()
-        });
-      } else {
-        await db.collection("users").doc(cred.user.uid).update({
-          role:"kurucu", lastLogin: firebase.firestore.FieldValue.serverTimestamp()
-        }).catch(()=>{});
-      }
+      if (!ex.exists) await newProfile(cred.user.uid, "kurucu", "kurucu");
+      else await db.collection("users").doc(cred.user.uid).update({ role:"kurucu", lastLogin: firebase.firestore.FieldValue.serverTimestamp() }).catch(()=>{});
     } else {
       db.collection("users").doc(cred.user.uid).update({ lastLogin: firebase.firestore.FieldValue.serverTimestamp() }).catch(()=>{});
     }
