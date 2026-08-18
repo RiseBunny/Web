@@ -1,4 +1,4 @@
-/*! RiseBunny — Admin Forum Yönetimi (FINAL) */
+/*! RiseBunny — Admin Forum Yönetimi (FINAL v2) */
 (function () {
 'use strict';
 var tok = sessionStorage.getItem('rb_admin_token');
@@ -27,7 +27,6 @@ waitFB(function () {
   var FU = [], PW = {};
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
 
-  /* ── Forum sekmesini panele ekle ── */
   function inject() {
     var tabs = document.querySelectorAll('.tab');
     if (!tabs.length) return setTimeout(inject, 300);
@@ -39,7 +38,8 @@ waitFB(function () {
     var sec = document.createElement('section');
     sec.className = 'tab-panel'; sec.setAttribute('data-panel', 'forum');
     sec.innerHTML = '<h2>🐰 Forum Kullanıcıları</h2>' +
-      '<p style="color:#9ca3af;font-size:13px">👁 şifre gör · 📋 kopyala · 🔑 şifre değiştir · 🗑 <b style="color:#ff6b6d">HESABI SİL</b> (geri alınamaz!)</p>' +
+      '<p style="color:#9ca3af;font-size:13px">👁 şifre gör · 📋 kopyala · 🔑 şifre değiştir · 🗑 <b style="color:#ff6b6d">HESABI SİL</b> · 🧹 toplu temizlik</p>' +
+      '<button type="button" id="fu-purge" class="btn btn-outline btn-sm danger" style="margin:6px 0">🧹 KALINTI TEMİZLİĞİ — kurucu hariç TÜM hesapları sil</button>' +
       '<input type="text" id="fu-search" placeholder="🔍 Kullanıcı ara..." style="width:100%;margin:10px 0;padding:10px 12px;border-radius:10px;border:1px solid #2a3348;background:#0e1219;color:#fff;outline:none">' +
       '<div id="forum-users"><div class="msg-empty">Yükleniyor...</div></div>';
     var panels = document.querySelectorAll('.tab-panel');
@@ -51,6 +51,7 @@ waitFB(function () {
       load();
     });
     sec.querySelector('#fu-search').addEventListener('input', function (e) { render(e.target.value); });
+    sec.querySelector('#fu-purge').addEventListener('click', purgeAll);
   }
 
   function load() {
@@ -115,7 +116,10 @@ waitFB(function () {
         else { fallbackCopy(pw); done(); }
       });
       row.querySelector('.fu-chpw').addEventListener('click', function () { changePw(uid, u.username); });
-      row.querySelector('.fu-del').addEventListener('click', function () { del(uid, u.username); });
+      row.querySelector('.fu-del').addEventListener('click', function () {
+        if (!confirm('"' + u.username + '" silinsin mi?')) return;
+        doDelete(uid, u.username).then(function () { alert('✅ Hesap silindi.'); load(); });
+      });
     });
   }
 
@@ -127,7 +131,47 @@ waitFB(function () {
     document.body.removeChild(ta);
   }
 
-  /* ── 🔑 Şifre değiştir (e-posta zinciri + manuel fallback, asla patlamaz) ── */
+  /* ── Ortak silme (Auth + users + creds + konular + yorumlar) ── */
+  function doDelete(uid, username) {
+    var clean = function () {
+      return Promise.all([
+        db.collection('threads').where('authorId', '==', uid).get(),
+        db.collection('posts').where('authorId', '==', uid).get()
+      ]).then(function (snaps) {
+        var b = db.batch();
+        snaps[0].forEach(function (d) { b.delete(d.ref); });
+        snaps[1].forEach(function (d) { b.delete(d.ref); });
+        b.delete(db.collection('users').doc(uid));
+        return b.commit().then(function () {
+          return db.collection('creds').doc(uid).delete().catch(function () {});
+        });
+      });
+    };
+    var pw = PW[uid] && PW[uid].password ? PW[uid].password : null;
+    var em = (PW[uid] && PW[uid].email) ? PW[uid].email : (username + '@risebunny.app');
+    var p = (pw && secAuth) ? secAuth.signInWithEmailAndPassword(em, pw).then(function (r) { return r.user.delete(); }).catch(function () {}) : Promise.resolve();
+    return p.then(clean);
+  }
+
+  /* ── 🧹 TOPLU TEMİZLİK: kurucu/admin hariç HER ŞEY ── */
+  function purgeAll() {
+    if (!confirm('KURUCU hariç TÜM forum hesapları, konuları ve yorumları silinecek. Emin misin?')) return;
+    if (!confirm('SON UYARI: GERİ ALINAMAZ! Devam edilsin mi?')) return;
+    db.collection('users').get().then(function (snap) {
+      var chain = Promise.resolve();
+      snap.forEach(function (d) {
+        if (d.id === ADMIN_UID) return;
+        var u = d.data();
+        chain = chain.then(function () { return doDelete(d.id, u.username).catch(function () {}); });
+      });
+      return chain;
+    }).then(function () {
+      db.collection('activity').add({ action: 'forum_purge', detail: 'Toplu temizlik yapıldı', createdAt: firebase.firestore.FieldValue.serverTimestamp() }).catch(function () {});
+      alert('✅ Temizlik tamamlandı.'); load();
+    });
+  }
+
+  /* ── 🔑 Şifre değiştir ── */
   function changePw(uid, username) {
     var np = prompt('"' + username + '" için YENİ şifre (en az 6 karakter):');
     if (!np) return;
@@ -168,33 +212,6 @@ waitFB(function () {
       var mp2 = prompt('Bu kullanıcının eski şifresi kasada yok. Mevcut şifresini gir:');
       if (mp2) attempt(mp2, 0);
     }
-  }
-
-  /* ── 🗑 HESABI SİL (Auth + users + creds + konular + yorumlar) ── */
-  function del(uid, username) {
-    if (!confirm('"' + username + '" hesabı ve TÜM verileri silinecek. Emin misin?')) return;
-    if (!confirm('SON UYARI: GERİ ALINAMAZ! Devam edilsin mi?')) return;
-    var clean = function () {
-      return Promise.all([
-        db.collection('threads').where('authorId', '==', uid).get(),
-        db.collection('posts').where('authorId', '==', uid).get()
-      ]).then(function (snaps) {
-        var b = db.batch();
-        snaps[0].forEach(function (d) { b.delete(d.ref); });
-        snaps[1].forEach(function (d) { b.delete(d.ref); });
-        b.delete(db.collection('users').doc(uid));
-        return b.commit().then(function () {
-          return db.collection('creds').doc(uid).delete().catch(function () {});
-        });
-      });
-    };
-    var pw = PW[uid] && PW[uid].password ? PW[uid].password : null;
-    var em = (PW[uid] && PW[uid].email) ? PW[uid].email : (username + '@risebunny.app');
-    var p = (pw && secAuth) ? secAuth.signInWithEmailAndPassword(em, pw).then(function (r) { return r.user.delete(); }).catch(function () {}) : Promise.resolve();
-    p.then(clean).then(function () {
-      db.collection('activity').add({ action: 'forum_delete', detail: 'Hesap silindi: ' + username, createdAt: firebase.firestore.FieldValue.serverTimestamp() }).catch(function () {});
-      alert('✅ Hesap tamamen silindi.'); load();
-    }).catch(function (e) { alert('⚠️ Hata: ' + (e.message || e)); load(); });
   }
 
   inject();
